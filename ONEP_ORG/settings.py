@@ -22,6 +22,13 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-onep-e-commerce-platf
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True  # Geçici olarak hata mesajlarını görmek için True
 
+# Print environment info for debugging
+import os
+print(f"🔧 ONEP DEBUG: Environment check")
+print(f"🔧 DATABASE_URL exists: {'DATABASE_URL' in os.environ}")
+print(f"🔧 SECRET_KEY from env: {'SECRET_KEY' in os.environ}")
+print(f"🔧 Current working directory: {os.getcwd()}")
+
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
 
 
