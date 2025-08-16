@@ -19,17 +19,6 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         use_fixture = kwargs['use_fixture']
         
-        if use_fixture:
-            # Load data from fixture file
-            fixture_path = 'fixture_data.json'
-            if os.path.exists(fixture_path):
-                self.stdout.write('Fixture dosyasından veriler yükleniyor...')
-                call_command('loaddata', fixture_path)
-                self.stdout.write(self.style.SUCCESS('Fixture verileri başarıyla yüklendi!'))
-                return
-            else:
-                self.stdout.write(self.style.ERROR('Fixture dosyası bulunamadı, yeni veriler oluşturuluyor...'))
-        
         # Create superuser if it doesn't exist
         if not User.objects.filter(username='burakcantaspinar').exists():
             User.objects.create_superuser(
@@ -45,50 +34,82 @@ class Command(BaseCommand):
         if Urun.objects.count() == 0:
             sample_products = [
                 {
-                    'urun_adi': 'Samsung Galaxy S23',
-                    'aciklama': 'Yeni nesil Samsung Galaxy S23 akıllı telefon, 6.1 inç Dynamic AMOLED 2X ekran, 50MP kamera.',
-                    'fiyat': Decimal('21999.99'),
-                    'stok_adedi': 50,
-                    'kategori': 'Elektronik',
-                    'resim_url': 'https://images.samsung.com/is/image/samsung/p6pim/tr/2302/gallery/tr-galaxy-s23-s911-sm-s911bzgctur-534848783'
+                    'urun_adi': 'iPhone 15 Pro Max',
+                    'aciklama': 'Apple iPhone 15 Pro Max, 256GB, Titanyum Mavi. A17 Pro cip.',
+                    'fiyat': Decimal('52999.99'),
+                    'stok_adedi': 20,
+                    'kategori': 'Telefon',
+                    'resim_url': 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400'
                 },
                 {
-                    'urun_adi': 'Apple MacBook Pro M3',
-                    'aciklama': 'Yeni Apple M3 işlemcili MacBook Pro, 16GB RAM, 512GB SSD ve 14 inç Retina ekran.',
-                    'fiyat': Decimal('49999.99'),
-                    'stok_adedi': 25,
-                    'kategori': 'Bilgisayar',
-                    'resim_url': 'https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/mbp14-spacegray-select-202310?wid=904&hei=840&fmt=jpeg&qlt=90&.v=1697230830200'
+                    'urun_adi': 'MacBook Air M3',
+                    'aciklama': 'Apple MacBook Air 15 inc, M3 chip, 512GB SSD, 16GB RAM.',
+                    'fiyat': Decimal('42999.99'),
+                    'stok_adedi': 15,
+                    'kategori': 'Laptop',
+                    'resim_url': 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=400'
+                },
+                {
+                    'urun_adi': 'Dell XPS 13',
+                    'aciklama': 'Dell XPS 13 Plus, Intel i7-13700H, 16GB RAM, 1TB SSD.',
+                    'fiyat': Decimal('38999.99'),
+                    'stok_adedi': 12,
+                    'kategori': 'Laptop',
+                    'resim_url': 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400'
                 },
                 {
                     'urun_adi': 'Sony WH-1000XM5',
-                    'aciklama': 'Sony WH-1000XM5 gürültü engelleme özellikli kablosuz kulaklık. 30 saat pil ömrü.',
-                    'fiyat': Decimal('7499.99'),
-                    'stok_adedi': 100,
-                    'kategori': 'Ses Sistemleri',
-                    'resim_url': 'https://www.sony.com.tr/image/e9acc5f42e3d356efef9d3cc46d6f265?fmt=pjpeg&wid=330&bgcolor=FFFFFF&bgc=FFFFFF'
+                    'aciklama': 'Sony premium noise cancelling kulaklik. 30 saat batarya.',
+                    'fiyat': Decimal('3999.99'),
+                    'stok_adedi': 40,
+                    'kategori': 'Kulaklik',
+                    'resim_url': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400'
                 },
                 {
-                    'urun_adi': 'Dyson V12 Detect Slim',
-                    'aciklama': 'Dyson V12 Detect Slim Absolute kablosuz süpürge. Güçlü emiş ve lazer toz algılama.',
+                    'urun_adi': 'Apple Watch Series 9',
+                    'aciklama': 'Apple Watch Series 9, 45mm, GPS + Cellular, Spor Kordon.',
                     'fiyat': Decimal('14999.99'),
                     'stok_adedi': 30,
-                    'kategori': 'Ev Aletleri',
-                    'resim_url': 'https://dyson-h.assetsadobe2.com/is/image/content/dam/dyson/images/products/primary/394958-01.png'
+                    'kategori': 'Akilli Saat',
+                    'resim_url': 'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400'
                 },
                 {
-                    'urun_adi': 'Nike Air Zoom Pegasus 40',
-                    'aciklama': 'Nike Air Zoom Pegasus 40 koşu ayakkabısı. Reaktif yastıklama ve nefes alabilen üst malzeme.',
-                    'fiyat': Decimal('2799.99'),
-                    'stok_adedi': 75,
-                    'kategori': 'Spor',
-                    'resim_url': 'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/c08de082-0bd1-4ca6-9456-599d071636dd/pegasus-40-yol-koşu-ayakkabısı-jkV5Xq.png'
+                    'urun_adi': 'Nike Air Max 270',
+                    'aciklama': 'Nike Air Max 270 erkek spor ayakkabi. Siyah/Beyaz renk.',
+                    'fiyat': Decimal('2299.99'),
+                    'stok_adedi': 50,
+                    'kategori': 'Ayakkabi',
+                    'resim_url': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'
                 },
+                {
+                    'urun_adi': 'Samsung Galaxy S23',
+                    'aciklama': 'Yeni nesil Samsung Galaxy S23 akilli telefon, 6.1 inc Dynamic AMOLED 2X ekran.',
+                    'fiyat': Decimal('21999.99'),
+                    'stok_adedi': 50,
+                    'kategori': 'Telefon',
+                    'resim_url': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400'
+                },
+                {
+                    'urun_adi': 'AirPods Pro 2',
+                    'aciklama': 'Apple AirPods Pro 2. nesil, aktif gurultu engelleme.',
+                    'fiyat': Decimal('6999.99'),
+                    'stok_adedi': 35,
+                    'kategori': 'Kulaklik',
+                    'resim_url': 'https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400'
+                },
+                {
+                    'urun_adi': 'iPad Pro 12.9',
+                    'aciklama': 'Apple iPad Pro 12.9 inc, M2 chip, 256GB WiFi + Cellular.',
+                    'fiyat': Decimal('35999.99'),
+                    'stok_adedi': 18,
+                    'kategori': 'Tablet',
+                    'resim_url': 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400'
+                }
             ]
 
             for product_data in sample_products:
                 Urun.objects.create(**product_data)
                 
-            self.stdout.write(self.style.SUCCESS(f'{len(sample_products)} adet örnek ürün başarıyla oluşturuldu!'))
+            self.stdout.write(self.style.SUCCESS(f'{len(sample_products)} adet ornek urun basariyla olusturuldu!'))
         else:
-            self.stdout.write(self.style.WARNING('Veritabanında zaten ürünler mevcut.'))
+            self.stdout.write(self.style.WARNING(f'Veritabaninda zaten {Urun.objects.count()} adet urun mevcut.'))
