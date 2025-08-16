@@ -1,13 +1,35 @@
 from django.core.management.base import BaseCommand
+from django.core.management import call_command
 from django.contrib.auth.models import User
 from onep.models import Urun
 from decimal import Decimal
+import os
 
 
 class Command(BaseCommand):
     help = 'Create superuser and sample products for ONEP e-commerce'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--use-fixture',
+            action='store_true',
+            help='Load data from fixture_data.json file instead of creating new data',
+        )
+
     def handle(self, *args, **kwargs):
+        use_fixture = kwargs['use_fixture']
+        
+        if use_fixture:
+            # Load data from fixture file
+            fixture_path = 'fixture_data.json'
+            if os.path.exists(fixture_path):
+                self.stdout.write('Fixture dosyasından veriler yükleniyor...')
+                call_command('loaddata', fixture_path)
+                self.stdout.write(self.style.SUCCESS('Fixture verileri başarıyla yüklendi!'))
+                return
+            else:
+                self.stdout.write(self.style.ERROR('Fixture dosyası bulunamadı, yeni veriler oluşturuluyor...'))
+        
         # Create superuser if it doesn't exist
         if not User.objects.filter(username='burakcantaspinar').exists():
             User.objects.create_superuser(

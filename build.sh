@@ -12,4 +12,5 @@ python manage.py collectstatic --no-input
 python manage.py migrate
 
 # Set up initial data (creates superuser and sample products)
-python manage.py setup_onep
+# First try to load from fixture, if not available create new data
+python manage.py setup_onep --use-fixture

@@ -1,0 +1,210 @@
+[
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$kNe4ic5JBKhlpeN5HLojX0$XLIn9TT/WfitZHxumQEkgTzrYA5F5eB9RzTsFp7FE5k=",
+    "last_login": "2025-08-15T18:30:17.972Z",
+    "is_superuser": true,
+    "username": "burakcantaspinar",
+    "first_name": "",
+    "last_name": "",
+    "email": "burakcantaspinaar@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-08-09T22:08:00.916Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$P8xWOghktEU6GLjS7Ap97G$Lu4wPZoodNehtS3XyzX0aMPsE6I6AADMCMUuizBxX0o=",
+    "last_login": "2025-08-15T18:57:30.267Z",
+    "is_superuser": true,
+    "username": "burakcantaspinaar",
+    "first_name": "Burak Can",
+    "last_name": "Taþpýnar",
+    "email": "burak.can.153@hotmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-08-15T16:00:48.796Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "s8pyc56qwi276umtny535irudjcfvoaa",
+  "fields": {
+    "session_data": "eyJzZXBldCI6eyI0IjoxLCI5IjoxfX0:1uks9D:xx6-SWVT6KMs6wd9xPGIh26Zq8iCf1hpUlVbUehc1is",
+    "expire_date": "2025-08-10T22:34:43.268Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "v76guxe0agifdtz2om6janugy4uwar77",
+  "fields": {
+    "session_data": ".eJxVjMEOgyAQRP-Fc0MQBLYee-83mGUXi22DjejJ-O_FxEN7m8y8eZvocV1Sv5Y49yOLTmhx-e0C0ivmY-An5sckacrLPAZ5IPJci7xPHN-3k_0TJCypvm1DPjhUCrQjFw1ZblprnCPwmsPgdWtAtaYBQrQDKg81Wq4wXC1DlZb4iYvotn3_AjcXOt4:1un0nW:vefx8UAR42GH__dZUnllOofivSGoAGMcxczZVQuwsxM",
+    "expire_date": "2025-08-16T20:13:10.502Z"
+  }
+},
+{
+  "model": "onep.urun",
+  "pk": 1,
+  "fields": {
+    "urun_adi": "Samsung Galaxy S24 Ultra",
+    "aciklama": "En yeni Samsung flagship telefonu. 256GB depolama, 12GB RAM, S Pen dahil.",
+    "fiyat": "45999.99",
+    "stok_adedi": 25,
+    "kategori": "Telefon",
+    "resim_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400",
+    "olusturulma_tarihi": "2025-08-09T22:26:45.624Z",
+    "guncellenme_tarihi": "2025-08-09T22:26:45.624Z"
+  }
+},
+{
+  "model": "onep.urun",
+  "pk": 2,
+  "fields": {
+    "urun_adi": "iPhone 15 Pro Max",
+    "aciklama": "Apple iPhone 15 Pro Max, 256GB, Titanyum Mavi. A17 Pro çip.",
+    "fiyat": "52999.99",
+    "stok_adedi": 20,
+    "kategori": "Telefon",
+    "resim_url": "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400",
+    "olusturulma_tarihi": "2025-08-09T22:26:45.629Z",
+    "guncellenme_tarihi": "2025-08-09T22:26:45.629Z"
+  }
+},
+{
+  "model": "onep.urun",
+  "pk": 3,
+  "fields": {
+    "urun_adi": "MacBook Air M3",
+    "aciklama": "Apple MacBook Air 15 inç, M3 chip, 512GB SSD, 16GB RAM.",
+    "fiyat": "42999.99",
+    "stok_adedi": 15,
+    "kategori": "Laptop",
+    "resim_url": "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=400",
+    "olusturulma_tarihi": "2025-08-09T22:26:45.630Z",
+    "guncellenme_tarihi": "2025-08-09T22:26:45.630Z"
+  }
+},
+{
+  "model": "onep.urun",
+  "pk": 4,
+  "fields": {
+    "urun_adi": "Dell XPS 13",
+    "aciklama": "Dell XPS 13 Plus, Intel i7-13700H, 16GB RAM, 1TB SSD.",
+    "fiyat": "38999.99",
+    "stok_adedi": 12,
+    "kategori": "Laptop",
+    "resim_url": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400",
+    "olusturulma_tarihi": "2025-08-09T22:26:45.631Z",
+    "guncellenme_tarihi": "2025-08-09T22:26:45.631Z"
+  }
+},
+{
+  "model": "onep.urun",
+  "pk": 5,
+  "fields": {
+    "urun_adi": "Sony WH-1000XM5",
+    "aciklama": "Sony premium noise cancelling kulaklýk. 30 saat batarya.",
+    "fiyat": "3999.99",
+    "stok_adedi": 40,
+    "kategori": "Kulaklýk",
+    "resim_url": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+    "olusturulma_tarihi": "2025-08-09T22:26:45.632Z",
+    "guncellenme_tarihi": "2025-08-09T22:26:45.632Z"
+  }
+},
+{
+  "model": "onep.urun",
+  "pk": 6,
+  "fields": {
+    "urun_adi": "Apple Watch Series 9",
+    "aciklama": "Apple Watch Series 9, 45mm, GPS + Cellular, Spor Kordon.",
+    "fiyat": "14999.99",
+    "stok_adedi": 30,
+    "kategori": "Akýllý Saat",
+    "resim_url": "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400",
+    "olusturulma_tarihi": "2025-08-09T22:26:45.633Z",
+    "guncellenme_tarihi": "2025-08-09T22:26:45.633Z"
+  }
+},
+{
+  "model": "onep.urun",
+  "pk": 7,
+  "fields": {
+    "urun_adi": "Nike Air Max 270",
+    "aciklama": "Nike Air Max 270 erkek spor ayakkabý. Siyah/Beyaz renk.",
+    "fiyat": "2299.99",
+    "stok_adedi": 50,
+    "kategori": "Ayakkabý",
+    "resim_url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
+    "olusturulma_tarihi": "2025-08-09T22:26:45.634Z",
+    "guncellenme_tarihi": "2025-08-09T22:26:45.634Z"
+  }
+},
+{
+  "model": "onep.urun",
+  "pk": 8,
+  "fields": {
+    "urun_adi": "Adidas Ultraboost 22",
+    "aciklama": "Adidas Ultraboost 22 koþu ayakkabýsý. Gri/Siyah kombinasyon.",
+    "fiyat": "1899.99",
+    "stok_adedi": 35,
+    "kategori": "Ayakkabý",
+    "resim_url": "https://images.unsplash.com/photo-1520256862855-398228c41684?w=400",
+    "olusturulma_tarihi": "2025-08-09T22:26:45.634Z",
+    "guncellenme_tarihi": "2025-08-09T22:26:45.634Z"
+  }
+},
+{
+  "model": "onep.urun",
+  "pk": 9,
+  "fields": {
+    "urun_adi": "Levi's 501 Original Jeans",
+    "aciklama": "Klasik Levi's 501 erkek kot pantolon. Mavi renk, straight fit.",
+    "fiyat": "899.99",
+    "stok_adedi": 60,
+    "kategori": "Giyim",
+    "resim_url": "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400",
+    "olusturulma_tarihi": "2025-08-09T22:26:45.635Z",
+    "guncellenme_tarihi": "2025-08-09T22:26:45.635Z"
+  }
+},
+{
+  "model": "onep.urun",
+  "pk": 10,
+  "fields": {
+    "urun_adi": "Nike Dri-FIT T-Shirt",
+    "aciklama": "Nike Dri-FIT erkek antrenman t-shirt. Siyah renk, L beden.",
+    "fiyat": "299.99",
+    "stok_adedi": 80,
+    "kategori": "Giyim",
+    "resim_url": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",
+    "olusturulma_tarihi": "2025-08-09T22:26:45.636Z",
+    "guncellenme_tarihi": "2025-08-09T22:26:45.636Z"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2025-08-15T18:06:56.225Z",
+    "user": [
+      "burakcantaspinar"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "3",
+    "object_repr": "alikutlu",
+    "action_flag": 3,
+    "change_message": ""
+  }
+}
+]
