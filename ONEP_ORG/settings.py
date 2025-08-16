@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-onep-e-commerce-platform-development-key-2025')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = True  # Geçici olarak hata mesajlarını görmek için True
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
 
@@ -75,7 +75,10 @@ WSGI_APPLICATION = 'ONEP_ORG.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"postgresql://postgres:Selam.235689.@127.0.0.1:5432/onep_db",
+        default="postgresql://postgres:Selam.235689.@127.0.0.1:5432/onep_db",
+        conn_max_age=600,
+        conn_health_checks=True,
+    ) if not os.environ.get('DATABASE_URL') else dj_database_url.config(
         conn_max_age=600,
         conn_health_checks=True,
     )
@@ -123,7 +126,7 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # WhiteNoise configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
