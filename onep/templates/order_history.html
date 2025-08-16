@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sipariş Geçmişim - ONEP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .order-status {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .status-beklemede {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-onaylandi {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .status-kargolandi {
+        background-color: #cfe2ff;
+        color: #0d6efd;
+    }
+    
+    .status-teslim_edildi {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .status-iptal_edildi {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+    
+    .order-items {
+        border-top: 1px solid #e9ecef;
+        border-bottom: 1px solid #e9ecef;
+        padding: 15px 0;
+        margin-bottom: 15px;
+    }
+    
+    .order-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed #e9ecef;
+    }
+    
+    .order-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    
+    .order-item-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-right: 15px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h4 {
+        margin-bottom: 10px;
+        color: #495057;
+    }
+    
+    .empty-state p {
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h2 class="fw-bold text-gradient">
+                <i class="fas fa-history me-3"></i>Sipariş Geçmişim
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'product_list' %}" class="text-decoration-none">Ana Sayfa</a>
+                    </li>
+                    <li class="breadcrumb-item active">Sipariş Geçmişi</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    {% if siparisler %}
+        {% for siparis in siparisler %}
+        <div class="order-card">
+            <div class="order-header">
+                <div>
+                    <h5 class="mb-1">
+                        <i class="fas fa-shopping-bag me-2"></i>
+                        Sipariş #{{ siparis.id }}
+                    </h5>
+                    <small class="text-muted">{{ siparis.siparis_tarihi|date:"d F Y, H:i" }}</small>
+                </div>
+                <div>
+                    <span class="order-status status-{{ siparis.durum }}">
+                        {% if siparis.durum == 'beklemede' %}
+                            Beklemede
+                        {% elif siparis.durum == 'onaylandi' %}
+                            Onaylandı
+                        {% elif siparis.durum == 'kargolandi' %}
+                            Kargolandı
+                        {% elif siparis.durum == 'teslim_edildi' %}
+                            Teslim Edildi
+                        {% elif siparis.durum == 'iptal_edildi' %}
+                            İptal Edildi
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="order-items">
+                {% for kalem in siparis.kalemler.all %}
+                <div class="order-item">
+                    {% if kalem.urun.resim_url %}
+                        <img src="{{ kalem.urun.resim_url }}" alt="{{ kalem.urun.urun_adi }}" class="order-item-image">
+                    {% else %}
+                        <div class="order-item-image bg-light d-flex align-items-center justify-content-center">
+                            <i class="fas fa-image text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">{{ kalem.urun.urun_adi }}</h6>
+                        <p class="mb-0 text-muted small">
+                            {{ kalem.miktar }} adet × {{ kalem.birim_fiyat|floatformat:2 }} ₺
+                        </p>
+                    </div>
+                    
+                    <div class="text-end">
+                        <strong>{{ kalem.birim_fiyat|floatformat:2 }} ₺</strong>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="order-footer">
+                <div class="order-total">
+                    <h5 class="mb-0">
+                        Toplam: <span class="text-primary">{{ siparis.toplam_tutar|floatformat:2 }} ₺</span>
+                    </h5>
+                </div>
+                <div class="order-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="showOrderDetails('{{ siparis.id }}')">
+                        <i class="fas fa-eye me-2"></i>Detaylar
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="order-card">
+            <div class="empty-state">
+                <i class="fas fa-shopping-bag"></i>
+                <h4>Henüz Siparişiniz Yok</h4>
+                <p>Alışverişe başlamak için ürünlerimizi inceleyin!</p>
+                <a href="{% url 'product_list' %}" class="btn btn-primary">
+                    <i class="fas fa-shopping-cart me-2"></i>
+                    Alışverişe Başla
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{% url 'profile' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>
+            Profilime Dön
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showOrderDetails(orderId) {
+    console.log("Sipariş detayları gösteriliyor: " + orderId);
+    // Burada sipariş detaylarını gösteren bir modal açılabilir veya detay sayfasına yönlendirme yapılabilir
+}
+</script>
+{% endblock %}

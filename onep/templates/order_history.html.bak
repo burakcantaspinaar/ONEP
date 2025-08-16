@@ -1,0 +1,960 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sipariş Geçmişim - ONEP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content {
+        padding-top: 100px;
+        min-height: 100vh;
+        background: #f8f9fa;
+    }
+    
+    .order-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .order-status {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .status-beklemede { background: #ffeaa7; color: #636e72; }
+    .status-onaylandi { background: #74b9ff; color: white; }
+    .status-kargolandi { background: #fdcb6e; color: white; }
+    .status-teslim_edildi { background: #00b894; color: white; }
+    .status-iptal_edildi { background: #e17055; color: white; }
+    
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    
+    .order-item-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-right: 15px;
+    }
+    
+    .order-total {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        text-align: right;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        color: #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 mb-4">
+                <h2 class="fw-bold text-primary">
+                    <i class="fas fa-history me-3"></i>Sipariş Geçmişim
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Ana Sayfa</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'profile' %}">Profilim</a></li>
+                        <li class="breadcrumb-item active">Sipariş Geçmişi</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        {% if siparisler %}
+            {% for siparis in siparisler %}
+            <div class="order-card">
+                <div class="order-header">
+                    <div>
+                        <h5 class="mb-1">
+                            <i class="fas fa-shopping-bag me-2"></i>
+                            Sipariş #{{ siparis.id }}
+                        </h5>
+                        <small class="text-muted">{{ siparis.siparis_tarihi|date:"d F Y, H:i" }}</small>
+                    </div>
+                    <div>
+                        <span class="order-status status-{{ siparis.durum }}">
+                            {% if siparis.durum == 'beklemede' %}
+                                Beklemede
+                            {% elif siparis.durum == 'onaylandi' %}
+                                Onaylandı
+                            {% elif siparis.durum == 'kargolandi' %}
+                                Kargolandı
+                            {% elif siparis.durum == 'teslim_edildi' %}
+                                Teslim Edildi
+                            {% elif siparis.durum == 'iptal_edildi' %}
+                                İptal Edildi
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="order-items">
+                    {% for kalem in siparis.kalemler.all %}
+                    <div class="order-item">
+                        {% if kalem.urun.resim_url %}
+                            <img src="{{ kalem.urun.resim_url }}" alt="{{ kalem.urun.urun_adi }}" class="order-item-image">
+                        {% else %}
+                            <div class="order-item-image bg-light d-flex align-items-center justify-content-center">
+                                <i class="fas fa-image text-muted"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ kalem.urun.urun_adi }}</h6>
+                            <p class="mb-0 text-muted small">
+                                {{ kalem.miktar }} adet × {{ kalem.birim_fiyat|floatformat:2 }} ₺
+                            </p>
+                        </div>
+                        
+                        <div class="text-end">
+                            <strong>{{ kalem.toplam_fiyat|floatformat:2 }} ₺</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="order-total">
+                    <h5 class="mb-0">
+                        Toplam: <span class="text-primary">{{ siparis.toplam_tutar|floatformat:2 }} ₺</span>
+                    </h5>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="order-card">
+                <div class="empty-state">
+                    <i class="fas fa-shopping-bag"></i>
+                    <h4>Henüz Siparişiniz Yok</h4>
+                    <p>Alışverişe başlamak için ürünlerimizi inceleyin!</p>
+                    <a href="{% url 'product_list' %}" class="btn btn-primary">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Alışverişe Başla
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{% url 'profile' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>
+                Profilime Dön
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Sipariş geçmişi için özel JavaScript burada olabilir -->
+{% endblock %}
+        font-weight: 500;
+        border-radius: 10px 10px 0 0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .filter-tab.active {
+        color: #667eea;
+        background: rgba(102, 126, 234, 0.1);
+    }
+    
+    .filter-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #667eea;
+    }
+    
+    .order-card {
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .order-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .order-number {
+        font-weight: bold;
+        color: #667eea;
+        font-size: 1.1rem;
+    }
+    
+    .order-date {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .order-status {
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-completed { background: #d4edda; color: #155724; }
+    .status-processing { background: #fff3cd; color: #856404; }
+    .status-shipped { background: #cce7ff; color: #004085; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    
+    .order-items {
+        margin-bottom: 20px;
+    }
+    
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-image {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .item-details {
+        flex-grow: 1;
+    }
+    
+    .item-name {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 2px;
+    }
+    
+    .item-specs {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .item-price {
+        font-weight: bold;
+        color: #667eea;
+        margin-left: 15px;
+    }
+    
+    .order-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .order-total {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    
+    .order-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 2px solid;
+    }
+    
+    .btn-track {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+    }
+    
+    .btn-track:hover {
+        background: #5a67d8;
+        transform: translateY(-1px);
+        color: white;
+    }
+    
+    .btn-reorder {
+        background: white;
+        border-color: #28a745;
+        color: #28a745;
+    }
+    
+    .btn-reorder:hover {
+        background: #28a745;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .btn-review {
+        background: white;
+        border-color: #ffc107;
+        color: #ffc107;
+    }
+    
+    .btn-review:hover {
+        background: #ffc107;
+        color: #212529;
+        transform: translateY(-1px);
+    }
+    
+    .btn-details {
+        background: white;
+        border-color: #6c757d;
+        color: #6c757d;
+    }
+    
+    .btn-details:hover {
+        background: #6c757d;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(30px, -30px);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .search-filter {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .search-input {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        padding: 10px 20px;
+    }
+    
+    .search-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .date-filter {
+        border-radius: 15px;
+        border: 2px solid #e9ecef;
+        padding: 8px 15px;
+    }
+    
+    .tracking-modal .modal-content {
+        border-radius: 20px;
+        border: none;
+    }
+    
+    .tracking-step {
+        display: flex;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .tracking-step:last-child {
+        border-bottom: none;
+    }
+    
+    .tracking-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        font-weight: bold;
+    }
+    
+    .tracking-step.completed .tracking-icon {
+        background: #28a745;
+        color: white;
+    }
+    
+    .tracking-step.current .tracking-icon {
+        background: #667eea;
+        color: white;
+    }
+    
+    .tracking-step.pending .tracking-icon {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h2 class="fw-bold text-gradient">
+                <i class="fas fa-history me-3"></i>Sipariş Geçmişim
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'product_list' %}" class="text-decoration-none">Ana Sayfa</a>
+                    </li>
+                    <li class="breadcrumb-item active">Sipariş Geçmişi</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-number">12</div>
+            <div class="stat-label">Toplam Sipariş</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">₺45,670</div>
+            <div class="stat-label">Toplam Harcama</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">2</div>
+            <div class="stat-label">Bekleyen Sipariş</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">₺3,890</div>
+            <div class="stat-label">Ortalama Sepet</div>
+        </div>
+    </div>
+
+    <div class="history-container">
+        <!-- Search and Filter -->
+        <div class="search-filter">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="input-group">
+                        <input type="text" class="form-control search-input" placeholder="Sipariş numarası veya ürün adı ile ara..." id="searchInput">
+                        <button class="btn btn-primary" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <select class="form-select date-filter">
+                        <option value="">Tüm Zamanlar</option>
+                        <option value="30">Son 30 Gün</option>
+                        <option value="90">Son 3 Ay</option>
+                        <option value="365">Son 1 Yıl</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-primary w-100" onclick="downloadOrderHistory()">
+                        <i class="fas fa-download me-2"></i>PDF İndir
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterOrders('all')">
+                <i class="fas fa-list me-2"></i>Tümü (12)
+            </button>
+            <button class="filter-tab" onclick="filterOrders('processing')">
+                <i class="fas fa-clock me-2"></i>Hazırlanıyor (2)
+            </button>
+            <button class="filter-tab" onclick="filterOrders('shipped')">
+                <i class="fas fa-truck me-2"></i>Kargoda (1)
+            </button>
+            <button class="filter-tab" onclick="filterOrders('completed')">
+                <i class="fas fa-check me-2"></i>Tamamlanan (8)
+            </button>
+            <button class="filter-tab" onclick="filterOrders('cancelled')">
+                <i class="fas fa-times me-2"></i>İptal Edilen (1)
+            </button>
+        </div>
+
+        <!-- Order Cards -->
+        <div id="ordersContainer">
+            <!-- Order 1 - Processing -->
+            <div class="order-card" data-status="processing">
+                <div class="order-header">
+                    <div>
+                        <div class="order-number">#ONEP-2025-000123</div>
+                        <div class="order-date">09 Ağustos 2025</div>
+                    </div>
+                    <span class="order-status status-processing">Hazırlanıyor</span>
+                </div>
+                
+                <div class="order-items">
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/50x50/667eea/ffffff?text=L" alt="Gaming Laptop Pro">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name">Gaming Laptop Pro</div>
+                            <div class="item-specs">Intel i7, RTX 4060, 16GB RAM - Adet: 1</div>
+                        </div>
+                        <div class="item-price">₺15,999</div>
+                    </div>
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/50x50/764ba2/ffffff?text=T" alt="Premium T-Shirt">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name">Premium T-Shirt</div>
+                            <div class="item-specs">%100 Pamuk, L Beden, Mavi - Adet: 2</div>
+                        </div>
+                        <div class="item-price">₺398</div>
+                    </div>
+                </div>
+                
+                <div class="order-footer">
+                    <div class="order-total">Toplam: ₺22,297</div>
+                    <div class="order-actions">
+                        <button class="btn btn-action btn-track" onclick="trackOrder('ONEP-2025-000123')">
+                            <i class="fas fa-map-marker-alt me-1"></i>Takip Et
+                        </button>
+                        <button class="btn btn-action btn-details" onclick="showOrderDetails('ONEP-2025-000123')">
+                            <i class="fas fa-eye me-1"></i>Detaylar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order 2 - Shipped -->
+            <div class="order-card" data-status="shipped">
+                <div class="order-header">
+                    <div>
+                        <div class="order-number">#ONEP-2025-000122</div>
+                        <div class="order-date">05 Ağustos 2025</div>
+                    </div>
+                    <span class="order-status status-shipped">Kargoda</span>
+                </div>
+                
+                <div class="order-items">
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/50x50/ffc107/000000?text=A" alt="Koşu Ayakkabısı">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name">Koşu Ayakkabısı</div>
+                            <div class="item-specs">Hafif ve dayanıklı, 42 Numara - Adet: 1</div>
+                        </div>
+                        <div class="item-price">₺899</div>
+                    </div>
+                </div>
+                
+                <div class="order-footer">
+                    <div class="order-total">Toplam: ₺1,060</div>
+                    <div class="order-actions">
+                        <button class="btn btn-action btn-track" onclick="trackOrder('ONEP-2025-000122')">
+                            <i class="fas fa-map-marker-alt me-1"></i>Takip Et
+                        </button>
+                        <button class="btn btn-action btn-details" onclick="showOrderDetails('ONEP-2025-000122')">
+                            <i class="fas fa-eye me-1"></i>Detaylar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order 3 - Completed -->
+            <div class="order-card" data-status="completed">
+                <div class="order-header">
+                    <div>
+                        <div class="order-number">#ONEP-2025-000121</div>
+                        <div class="order-date">28 Temmuz 2025</div>
+                    </div>
+                    <span class="order-status status-completed">Teslim Edildi</span>
+                </div>
+                
+                <div class="order-items">
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/50x50/dc3545/ffffff?text=K" alt="Web Tasarım Kitabı">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name">Web Tasarım Kitabı</div>
+                            <div class="item-specs">Modern web tasarım teknikleri - Adet: 1</div>
+                        </div>
+                        <div class="item-price">₺49</div>
+                    </div>
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/50x50/28a745/ffffff?text=K" alt="Modern Koltuk">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name">Modern Koltuk</div>
+                            <div class="item-specs">Konforlu ve şık tasarım, Gri - Adet: 1</div>
+                        </div>
+                        <div class="item-price">₺2,499</div>
+                    </div>
+                </div>
+                
+                <div class="order-footer">
+                    <div class="order-total">Toplam: ₺3,006</div>
+                    <div class="order-actions">
+                        <button class="btn btn-action btn-reorder" onclick="reorderItems('ONEP-2025-000121')">
+                            <i class="fas fa-redo me-1"></i>Tekrar Sipariş
+                        </button>
+                        <button class="btn btn-action btn-review" onclick="reviewOrder('ONEP-2025-000121')">
+                            <i class="fas fa-star me-1"></i>Değerlendir
+                        </button>
+                        <button class="btn btn-action btn-details" onclick="showOrderDetails('ONEP-2025-000121')">
+                            <i class="fas fa-eye me-1"></i>Detaylar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order 4 - Cancelled -->
+            <div class="order-card" data-status="cancelled">
+                <div class="order-header">
+                    <div>
+                        <div class="order-number">#ONEP-2025-000120</div>
+                        <div class="order-date">25 Temmuz 2025</div>
+                    </div>
+                    <span class="order-status status-cancelled">İptal Edildi</span>
+                </div>
+                
+                <div class="order-items">
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/50x50/6f42c1/ffffff?text=T" alt="Akıllı Telefon">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name">Akıllı Telefon</div>
+                            <div class="item-specs">Yüksek çözünürlük, hızlı işlemci - Adet: 1</div>
+                        </div>
+                        <div class="item-price">₺8,999</div>
+                    </div>
+                </div>
+                
+                <div class="order-footer">
+                    <div class="order-total">Toplam: ₺10,619</div>
+                    <div class="order-actions">
+                        <button class="btn btn-action btn-reorder" onclick="reorderItems('ONEP-2025-000120')">
+                            <i class="fas fa-redo me-1"></i>Tekrar Sipariş
+                        </button>
+                        <button class="btn btn-action btn-details" onclick="showOrderDetails('ONEP-2025-000120')">
+                            <i class="fas fa-eye me-1"></i>Detaylar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load More Button -->
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-primary" onclick="loadMoreOrders()">
+                <i class="fas fa-plus me-2"></i>Daha Fazla Sipariş Yükle
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Order Tracking Modal -->
+<div class="modal fade tracking-modal" id="trackingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    Sipariş Takibi - <span id="trackingOrderNumber"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="trackingSteps">
+                    <div class="tracking-step completed">
+                        <div class="tracking-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-1">Sipariş Alındı</h6>
+                            <p class="text-muted mb-0">09.08.2025 14:35 - Siparişiniz başarıyla alınmıştır.</p>
+                        </div>
+                    </div>
+                    <div class="tracking-step current">
+                        <div class="tracking-icon">
+                            <i class="fas fa-cog fa-spin"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-1">Hazırlanıyor</h6>
+                            <p class="text-muted mb-0">09.08.2025 15:00 - Siparişiniz depo ekibimiz tarafından hazırlanıyor.</p>
+                        </div>
+                    </div>
+                    <div class="tracking-step pending">
+                        <div class="tracking-icon">3</div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-1">Kargoya Verildi</h6>
+                            <p class="text-muted mb-0">Siparişiniz kargo firmasına teslim edilecek.</p>
+                        </div>
+                    </div>
+                    <div class="tracking-step pending">
+                        <div class="tracking-icon">4</div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-1">Yolda</h6>
+                            <p class="text-muted mb-0">Siparişiniz size ulaştırılmak üzere yola çıktı.</p>
+                        </div>
+                    </div>
+                    <div class="tracking-step pending">
+                        <div class="tracking-icon">5</div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-1">Teslim Edildi</h6>
+                            <p class="text-muted mb-0">Siparişiniz adresinize teslim edilecek.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Tahmini Teslimat:</strong> 11-13 Ağustos 2025 (1-3 iş günü)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterOrders(status) {
+    // Remove active class from all tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Add active class to clicked tab
+    event.target.classList.add('active');
+    
+    // Filter order cards
+    const orderCards = document.querySelectorAll('.order-card');
+    orderCards.forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function trackOrder(orderNumber) {
+    document.getElementById('trackingOrderNumber').textContent = orderNumber;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('trackingModal'));
+    modal.show();
+}
+
+function showOrderDetails(orderNumber) {
+    // In a real app, this would navigate to a detailed order page
+    alert(`${orderNumber} numaralı siparişin detayları gösterilecek.`);
+}
+
+function reorderItems(orderNumber) {
+    if (confirm('Bu siparişteki ürünleri sepetinize eklemek istiyor musunuz?')) {
+        // Simulate adding items to cart
+        const cartCount = document.getElementById('cartCount');
+        const currentCount = parseInt(cartCount.textContent);
+        cartCount.textContent = currentCount + 2;
+        
+        // Show success message
+        const toast = document.createElement('div');
+        toast.className = 'position-fixed top-0 end-0 p-3';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <div class="toast show" role="alert">
+                <div class="toast-header">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <strong class="me-auto">Başarılı</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    Ürünler sepetinize eklendi!
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+}
+
+function reviewOrder(orderNumber) {
+    alert(`${orderNumber} numaralı sipariş için değerlendirme sayfası açılacak.`);
+}
+
+function downloadOrderHistory() {
+    // Simulate PDF download
+    const link = document.createElement('a');
+    link.href = '#';
+    link.download = 'siparis-gecmisi.pdf';
+    
+    // Show downloading message
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>İndiriliyor...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        alert('PDF dosyası indirilmeye başladı!');
+    }, 2000);
+}
+
+function loadMoreOrders() {
+    // Simulate loading more orders
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Yükleniyor...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        alert('Daha fazla sipariş bulunamadı.');
+    }, 1500);
+}
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const orderCards = document.querySelectorAll('.order-card');
+    
+    orderCards.forEach(card => {
+        const orderNumber = card.querySelector('.order-number').textContent.toLowerCase();
+        const itemNames = Array.from(card.querySelectorAll('.item-name')).map(el => el.textContent.toLowerCase());
+        
+        const matches = orderNumber.includes(searchTerm) || itemNames.some(name => name.includes(searchTerm));
+        
+        card.style.display = matches ? 'block' : 'none';
+    });
+});
+
+// Auto-refresh order status (in real app)
+setInterval(() => {
+    // Check for order status updates
+    console.log('Checking for order status updates...');
+}, 60000); // Check every minute
+</script>
+{% endblock %}

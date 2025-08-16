@@ -1,0 +1,1163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sepetim - ONEP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content {
+        padding-top: 100px;
+        min-height: 100vh;
+        background: #f8f9fa;
+    }
+    
+    .cart-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .cart-item {
+        border-bottom: 1px solid #e9ecef;
+        padding: 20px 0;
+        transition: all 0.3s ease;
+    }
+    
+    .cart-item:last-child {
+        border-bottom: none;
+    }
+    
+    .cart-item:hover {
+        background: rgba(102, 126, 234, 0.02);
+        border-radius: 15px;
+        padding: 20px 15px;
+    }
+    
+    .product-image {
+        width: 100px;
+        height: 100px;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        overflow: hidden;
+        width: 130px;
+    }
+    
+    .qty-btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+    
+    .qty-btn:hover {
+        background: #5a6fd8;
+    }
+    
+    .qty-input {
+        border: none;
+        text-align: center;
+        width: 60px;
+        height: 35px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .qty-input:focus {
+        outline: none;
+        background: #f8f9fa;
+    }
+    
+    .remove-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .remove-btn:hover {
+        background: #c82333;
+        transform: scale(1.1);
+    }
+    
+    .price-tag {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .cart-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        position: sticky;
+        top: 120px;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .summary-row:last-child {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-top: 15px;
+        padding-top: 20px;
+    }
+    
+    .checkout-btn {
+        background: white;
+        color: #667eea;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 30px;
+        font-weight: bold;
+        width: 100%;
+        margin-top: 20px;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+    
+    .checkout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+        background: #f8f9fa;
+    }
+    
+    .continue-shopping {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    
+    .continue-shopping:hover {
+        color: #764ba2;
+        transform: translateX(-5px);
+    }
+    
+    .empty-cart {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-cart i {
+        font-size: 5rem;
+        color: #e9ecef;
+        margin-bottom: 20px;
+    }
+    
+    .text-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 mb-4">
+                <h2 class="fw-bold text-gradient">
+                    <i class="fas fa-shopping-cart me-3"></i>Sepetim
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Ana Sayfa</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Sepet</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        {% if sepet_urunleri %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="cart-container">
+                    {% for item in sepet_urunleri %}
+                    <div class="cart-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-2">
+                                <div class="product-image">
+                                    {% if item.urun.resim %}
+                                        <img src="{{ item.urun.resim.url }}" alt="{{ item.urun.urun_adi }}">
+                                    {% else %}
+                                        <img src="{% static 'images/default-product.png' %}" alt="Varsayılan Resim">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h5 class="mb-1">{{ item.urun.urun_adi }}</h5>
+                                <p class="text-muted mb-1">{{ item.urun.kategori }}</p>
+                                <p class="text-muted small mb-0">Stok: {{ item.urun.stok_adedi }} adet</p>
+                            </div>
+                            <div class="col-md-2">
+                                <form method="post" action="{% url 'sepet_guncelle' item.urun.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <div class="quantity-controls">
+                                        <button type="button" class="qty-btn" onclick="this.parentNode.querySelector('.qty-input').stepDown(); this.parentNode.parentNode.submit();">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <input type="number" class="qty-input" name="miktar" value="{{ item.miktar }}" min="1" max="{{ item.urun.stok_adedi }}" readonly>
+                                        <button type="button" class="qty-btn" onclick="this.parentNode.querySelector('.qty-input').stepUp(); this.parentNode.parentNode.submit();">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="price-tag">{{ item.urun.fiyat|floatformat:2 }} ₺</div>
+                                <small class="text-muted">Birim Fiyat</small>
+                            </div>
+                            <div class="col-md-1">
+                                <div class="price-tag">{{ item.toplam_fiyat|floatformat:2 }} ₺</div>
+                                <small class="text-muted">Toplam</small>
+                            </div>
+                            <div class="col-md-1">
+                                <form method="post" action="{% url 'sepetten_sil' item.urun.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="remove-btn" title="Sepetten Sil" onclick="return confirm('Bu ürünü sepetten kaldırmak istediğinizden emin misiniz?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="cart-summary">
+                    <h4 class="mb-4">
+                        <i class="fas fa-receipt me-2"></i>Sipariş Özeti
+                    </h4>
+                    
+                    <div class="summary-row">
+                        <span>Ara Toplam:</span>
+                        <span>{{ toplam_fiyat|floatformat:2 }} ₺</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>Kargo:</span>
+                        <span>Ücretsiz</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>KDV (%18):</span>
+                        <span>{{ kdv_tutari|floatformat:2 }} ₺</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>Genel Toplam:</span>
+                        <span>{{ genel_toplam|floatformat:2 }} ₺</span>
+                    </div>
+                    
+                    <a href="{% url 'checkout' %}" class="btn checkout-btn">
+                        <i class="fas fa-credit-card me-2"></i>Ödeme Yap
+                    </a>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{% url 'product_list' %}" class="continue-shopping">
+                            <i class="fas fa-arrow-left me-2"></i>Alışverişe Devam Et
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="cart-container">
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3 class="mb-3">Sepetiniz Boş</h3>
+                        <p class="text-muted mb-4">Henüz sepetinize ürün eklemediniz. Hemen alışverişe başlayın!</p>
+                        <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Alışverişe Başla
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+    }
+    
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        overflow: hidden;
+        width: fit-content;
+    }
+    
+    .quantity-btn {
+        background: white;
+        border: none;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #667eea;
+    }
+    
+    .quantity-btn:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    .quantity-display {
+        border: none;
+        width: 50px;
+        text-align: center;
+        font-weight: bold;
+        height: 35px;
+        line-height: 35px;
+        background: #f8f9fa;
+    }
+    
+    .remove-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .remove-btn:hover {
+        background: #c82333;
+        transform: scale(1.1);
+    }
+    
+    .price-tag {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .cart-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        position: sticky;
+        top: 120px;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .summary-row:last-child {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-top: 15px;
+        padding-top: 20px;
+    }
+    
+    .checkout-btn {
+        background: white;
+        color: #667eea;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 30px;
+        font-weight: bold;
+        width: 100%;
+        margin-top: 20px;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+    
+    .checkout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+        background: #f8f9fa;
+    }
+    
+    .continue-shopping {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    
+    .continue-shopping:hover {
+        color: #764ba2;
+        transform: translateX(-5px);
+    }
+    
+    .empty-cart {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-cart i {
+        font-size: 5rem;
+        color: #e9ecef;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h2 class="fw-bold">
+                <i class="fas fa-shopping-cart me-3"></i>Sepetim
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'product_list' %}" class="text-decoration-none">Ana Sayfa</a>
+                    </li>
+                    <li class="breadcrumb-item active">Sepet</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    {% if sepet_bos %}
+    <!-- Boş sepet -->
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="cart-container">
+                <div class="empty-cart text-center py-5">
+                    <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">Sepetiniz boş</h5>
+                    <p class="text-muted">Alışverişe başlamak için ürünleri inceleyin</p>
+                    <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-shopping-bag me-2"></i>Alışverişe Başla
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    
+    <div class="row">
+        <!-- Sepetteki Ürünler -->
+        <div class="col-lg-8">
+            <div class="cart-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Sepetinizdeki Ürünler</h5>
+                    <span class="text-muted">{{ sepet_urunleri|length }} ürün</span>
+                </div>
+
+                {% for item in sepet_urunleri %}
+                <div class="cart-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 col-3">
+                            <div class="product-image">
+                                <img src="{{ item.urun.resim_url }}" alt="{{ item.urun.urun_adi }}" 
+                                     onerror="this.src='https://via.placeholder.com/100x100/667eea/ffffff?text=Ürün'">
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-9">
+                            <h6 class="fw-bold mb-1">{{ item.urun.urun_adi }}</h6>
+                            <p class="text-muted small mb-1">{{ item.urun.kategori }}</p>
+                            {% if item.urun.stok_adedi > 10 %}
+                                <p class="text-success small mb-0">
+                                    <i class="fas fa-check me-1"></i>Stokta var
+                                </p>
+                            {% elif item.urun.stok_adedi > 0 %}
+                                <p class="text-warning small mb-0">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Sadece {{ item.urun.stok_adedi }} adet kaldı
+                                </p>
+                            {% else %}
+                                <p class="text-danger small mb-0">
+                                    <i class="fas fa-times me-1"></i>Stokta yok
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2 col-6 text-center">
+                            <div class="quantity-control">
+                                <form method="post" action="{% url 'sepet_guncelle' item.urun.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="miktar" value="{{ item.miktar|add:'-1' }}">
+                                    <button type="submit" class="quantity-btn" {% if item.miktar <= 1 %}disabled{% endif %}>
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </form>
+                                <span class="quantity-display">{{ item.miktar }}</span>
+                                <form method="post" action="{% url 'sepet_guncelle' item.urun.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="miktar" value="{{ item.miktar|add:'1' }}">
+                                    <button type="submit" class="quantity-btn" {% if item.miktar >= item.urun.stok_adedi %}disabled{% endif %}>
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-4 text-center">
+                            <div class="price-tag">₺{{ item.toplam|floatformat:2 }}</div>
+                            <div class="text-muted small">Birim: ₺{{ item.urun.fiyat|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-md-2 col-2 text-end">
+                            <form method="post" action="{% url 'sepetten_sil' item.urun.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="remove-btn" 
+                                        onclick="return confirm('{{ item.urun.urun_adi }} ürününü sepetinizden çıkarmak istediğinizden emin misiniz?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Alışverişe Devam -->
+                <div class="text-start mt-4">
+                    <a href="{% url 'product_list' %}" class="continue-shopping">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Alışverişe Devam Et
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sipariş Özeti -->
+        <div class="col-lg-4">
+            <div class="cart-summary">
+                <h5 class="fw-bold mb-4">
+                    <i class="fas fa-receipt me-2"></i>Sipariş Özeti
+                </h5>
+
+                <div class="summary-row">
+                    <span>Ürün Toplamı:</span>
+                    <span>₺{{ toplam_tutar|floatformat:2 }}</span>
+                </div>
+
+                <div class="summary-row">
+                    <span>Kargo:</span>
+                    {% if toplam_tutar >= 500 %}
+                        <span class="text-success">Ücretsiz</span>
+                    {% else %}
+                        <span>₺29.99</span>
+                    {% endif %}
+                </div>
+
+                <div class="summary-row">
+                    <span>Genel Toplam:</span>
+                    <span>₺{% if toplam_tutar >= 500 %}{{ toplam_tutar|floatformat:2 }}{% else %}{{ toplam_tutar|add:'29.99'|floatformat:2 }}{% endif %}</span>
+                </div>
+
+                <a href="{% url 'checkout' %}" class="checkout-btn">
+                    <i class="fas fa-credit-card me-2"></i>
+                    Siparişi Tamamla
+                </a>
+
+                {% if toplam_tutar < 500 %}
+                <div class="text-center mt-3">
+                    <small class="opacity-75">
+                        <i class="fas fa-info-circle me-1"></i>
+                        ₺{{ 500|floatformat:2|add:"-"|add:toplam_tutar|floatformat:2 }} daha alışveriş yapın, kargo ücretsiz olsun!
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+    }
+    
+    .remove-btn:hover {
+        background: #c82333;
+        transform: scale(1.1);
+    }
+    
+    .price-tag {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .old-price {
+        text-decoration: line-through;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .cart-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        position: sticky;
+        top: 120px;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .summary-row:last-child {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-top: 15px;
+        padding-top: 20px;
+    }
+    
+    .checkout-btn {
+        background: white;
+        color: #667eea;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 30px;
+        font-weight: bold;
+        width: 100%;
+        margin-top: 20px;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+    
+    .checkout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+        background: #f8f9fa;
+    }
+    
+    .continue-shopping {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    
+    .continue-shopping:hover {
+        color: #764ba2;
+        transform: translateX(-5px);
+    }
+    
+    .empty-cart {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-cart i {
+        font-size: 5rem;
+        color: #e9ecef;
+        margin-bottom: 20px;
+    }
+    
+    .coupon-section {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .coupon-input {
+        border-radius: 25px;
+        border: 2px solid #e9ecef;
+        padding: 10px 20px;
+    }
+    
+    .coupon-btn {
+        border-radius: 25px;
+        background: #28a745;
+        border: none;
+        color: white;
+        padding: 10px 25px;
+        font-weight: 500;
+    }
+    
+    .savings-highlight {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        padding: 15px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h2 class="fw-bold text-gradient">
+                <i class="fas fa-shopping-cart me-3"></i>Sepetim
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'product_list' %}" class="text-decoration-none">Ana Sayfa</a>
+                    </li>
+                    <li class="breadcrumb-item active">Sepet</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="cart-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Sepetinizdeki Ürünler</h5>
+                    <span class="text-muted">{{ sepet_urunleri|length }} ürün</span>
+                </div>
+
+                {% if sepet_bos %}
+                <!-- Boş sepet mesajı -->
+                <div class="empty-cart text-center py-5">
+                    <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">Sepetiniz boş</h5>
+                    <p class="text-muted">Alışverişe başlamak için ürünleri inceleyin</p>
+                    <a href="{% url 'product_list' %}" class="btn btn-primary">
+                        <i class="fas fa-shopping-bag me-2"></i>Alışverişe Başla
+                    </a>
+                </div>
+                {% else %}
+
+                {% for item in sepet_urunleri %}
+                <!-- Cart Item -->
+                <div class="cart-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 col-3">
+                            <div class="product-image">
+                                <img src="{{ item.urun.resim_url }}" alt="{{ item.urun.urun_adi }}" onerror="this.src='https://via.placeholder.com/100x100/667eea/ffffff?text=Ürün'">
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-9">
+                            <h6 class="fw-bold mb-1">{{ item.urun.urun_adi }}</h6>
+                            <p class="text-muted small mb-1">{{ item.urun.kategori }}</p>
+                            <p class="text-success small mb-0">
+                                <i class="fas fa-truck me-1"></i>Ücretsiz kargo
+                            </p>
+                        </div>
+                        <div class="col-md-2 col-6 text-center">
+                            <div class="quantity-control">
+                                <form method="post" action="{% url 'sepet_guncelle' item.urun.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="miktar" value="{{ item.miktar|add:'-1' }}">
+                                    <button type="submit" class="quantity-btn" {% if item.miktar <= 1 %}disabled{% endif %}>
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                </form>
+                                <span class="quantity-display">{{ item.miktar }}</span>
+                                <form method="post" action="{% url 'sepet_guncelle' item.urun.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="miktar" value="{{ item.miktar|add:'1' }}">
+                                    <button type="submit" class="quantity-btn">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-4 text-center">
+                            <div class="price-tag">₺{{ item.toplam|floatformat:2 }}</div>
+                            <div class="text-muted small">Birim: ₺{{ item.urun.fiyat|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-md-2 col-2 text-end">
+                            <form method="post" action="{% url 'sepetten_sil' item.urun.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="remove-btn" onclick="return confirm('Bu ürünü sepetinizden çıkarmak istediğinizden emin misiniz?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+                    </div>
+                </div>
+
+                <!-- Cart Item 3 -->
+                <div class="cart-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 col-3">
+                            <div class="product-image">
+                                <img src="https://via.placeholder.com/100x100/28a745/ffffff?text=Koltuk" alt="Modern Koltuk">
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-9">
+                            <h6 class="fw-bold mb-1">Modern Koltuk</h6>
+                            <p class="text-muted small mb-1">Konforlu ve şık tasarım, Gri</p>
+                            <p class="text-warning small mb-0">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Sadece 2 adet kaldı
+                            </p>
+                        </div>
+                        <div class="col-md-2 col-6 text-center">
+                            <div class="quantity-control">
+                                <button class="quantity-btn" onclick="decreaseQuantity('item3')">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" class="quantity-input" value="1" min="1" max="2" id="item3" onchange="updateItemTotal('item3', 2499)">
+                                <button class="quantity-btn" onclick="increaseQuantity('item3')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-4 text-center">
+                            <div class="price-tag" id="item3-total">₺2,499</div>
+                        </div>
+                        <div class="col-md-2 col-2 text-end">
+                            <button class="remove-btn" onclick="removeItem('item3')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coupon Section -->
+                <div class="coupon-section">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-tag me-2 text-success"></i>İndirim Kuponu
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-8 mb-2">
+                            <input type="text" class="form-control coupon-input" placeholder="Kupon kodunuzu girin" id="couponCode">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn coupon-btn w-100" onclick="applyCoupon()">
+                                <i class="fas fa-check me-2"></i>Uygula
+                            </button>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Geçerli kuponlar: WELCOME10, SUMMER20, STUDENT15
+                    </small>
+                </div>
+
+                <!-- Continue Shopping -->
+                <div class="text-start">
+                    <a href="{% url 'product_list' %}" class="continue-shopping">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Alışverişe Devam Et
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="col-lg-4">
+            <div class="cart-summary">
+                <h5 class="fw-bold mb-4">
+                    <i class="fas fa-receipt me-2"></i>Sipariş Özeti
+                </h5>
+
+                <div class="summary-row">
+                    <span>Ara Toplam:</span>
+                    <span id="subtotal">₺18,896</span>
+                </div>
+
+                <div class="summary-row">
+                    <span>Kargo:</span>
+                    <span class="text-success">Ücretsiz</span>
+                </div>
+
+                <div class="summary-row" id="discountRow" style="display: none;">
+                    <span>İndirim:</span>
+                    <span class="text-warning" id="discount">₺0</span>
+                </div>
+
+                <div class="summary-row">
+                    <span>KDV (%18):</span>
+                    <span id="tax">₺3,401</span>
+                </div>
+
+                <div class="summary-row">
+                    <span>Toplam:</span>
+                    <span id="total">₺22,297</span>
+                </div>
+
+                <!-- Savings Highlight -->
+                <div class="savings-highlight" id="savingsSection" style="display: none;">
+                    <i class="fas fa-piggy-bank me-2"></i>
+                    <span id="savingsAmount">₺3,103</span> tasarruf ettiniz!
+                </div>
+
+                <button class="checkout-btn" onclick="goToCheckout()">
+                    <i class="fas fa-credit-card me-2"></i>
+                    Ödemeye Geç
+                </button>
+
+                <div class="text-center mt-3">
+                    <small class="text-light">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Güvenli ödeme garantisi
+                    </small>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="text-center mt-3">
+                    <small class="text-light d-block mb-2">Kabul edilen ödeme yöntemleri:</small>
+                    <div class="d-flex justify-content-center gap-2">
+                        <i class="fab fa-cc-visa fs-5"></i>
+                        <i class="fab fa-cc-mastercard fs-5"></i>
+                        <i class="fas fa-university fs-5"></i>
+                        <i class="fas fa-mobile-alt fs-5"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recently Viewed -->
+            <div class="cart-container mt-4">
+                <h6 class="fw-bold mb-3">
+                    <i class="fas fa-history me-2 text-primary"></i>Son Görüntülenen
+                </h6>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="card border-0 shadow-sm">
+                            <img src="https://via.placeholder.com/150x120/ffc107/000000?text=Ayakkabi" class="card-img-top" alt="Ayakkabı">
+                            <div class="card-body p-2">
+                                <h6 class="card-title small mb-1">Koşu Ayakkabısı</h6>
+                                <p class="text-primary small fw-bold mb-0">₺899</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="card border-0 shadow-sm">
+                            <img src="https://via.placeholder.com/150x120/dc3545/ffffff?text=Kitap" class="card-img-top" alt="Kitap">
+                            <div class="card-body p-2">
+                                <h6 class="card-title small mb-1">Web Tasarım</h6>
+                                <p class="text-primary small fw-bold mb-0">₺49</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Empty Cart Template (Hidden by default) -->
+<div class="container d-none" id="emptyCartTemplate">
+    <div class="cart-container">
+        <div class="empty-cart">
+            <i class="fas fa-shopping-cart"></i>
+            <h4 class="fw-bold mb-3">Sepetiniz Boş</h4>
+            <p class="text-muted mb-4">Henüz sepetinize ürün eklemediniz. Hemen alışverişe başlayın!</p>
+            <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-shopping-bag me-2"></i>
+                Alışverişe Başla
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function increaseQuantity(itemId) {
+    const input = document.getElementById(itemId);
+    const max = input.getAttribute('max');
+    const currentValue = parseInt(input.value);
+    
+    if (!max || currentValue < parseInt(max)) {
+        input.value = currentValue + 1;
+        const price = getItemPrice(itemId);
+        updateItemTotal(itemId, price);
+    }
+}
+
+function decreaseQuantity(itemId) {
+    const input = document.getElementById(itemId);
+    const currentValue = parseInt(input.value);
+    
+    if (currentValue > 1) {
+        input.value = currentValue - 1;
+        const price = getItemPrice(itemId);
+        updateItemTotal(itemId, price);
+    }
+}
+
+function getItemPrice(itemId) {
+    const prices = {
+        'item1': 15999,
+        'item2': 199,
+        'item3': 2499
+    };
+    return prices[itemId];
+}
+
+function updateItemTotal(itemId, unitPrice) {
+    const quantity = parseInt(document.getElementById(itemId).value);
+    const total = unitPrice * quantity;
+    
+    document.getElementById(itemId + '-total').textContent = '₺' + total.toLocaleString('tr-TR');
+    updateCartSummary();
+}
+
+function updateCartSummary() {
+    let subtotal = 0;
+    
+    // Calculate subtotal
+    ['item1', 'item2', 'item3'].forEach(itemId => {
+        const quantity = parseInt(document.getElementById(itemId).value);
+        const price = getItemPrice(itemId);
+        subtotal += quantity * price;
+    });
+    
+    // Apply discount if any
+    const discountAmount = parseFloat(document.getElementById('discount').textContent.replace('₺', '').replace(',', '')) || 0;
+    const discountedSubtotal = subtotal - discountAmount;
+    
+    // Calculate tax (18%)
+    const tax = Math.round(discountedSubtotal * 0.18);
+    const total = discountedSubtotal + tax;
+    
+    // Update display
+    document.getElementById('subtotal').textContent = '₺' + subtotal.toLocaleString('tr-TR');
+    document.getElementById('tax').textContent = '₺' + tax.toLocaleString('tr-TR');
+    document.getElementById('total').textContent = '₺' + total.toLocaleString('tr-TR');
+    
+    // Show savings if discount applied
+    if (discountAmount > 0) {
+        const originalTotal = subtotal + Math.round(subtotal * 0.18);
+        const savings = originalTotal - total;
+        document.getElementById('savingsAmount').textContent = '₺' + savings.toLocaleString('tr-TR');
+        document.getElementById('savingsSection').style.display = 'block';
+    }
+}
+
+function removeItem(itemId) {
+    if (confirm('Bu ürünü sepetten çıkarmak istediğinizden emin misiniz?')) {
+        const cartItem = document.getElementById(itemId).closest('.cart-item');
+        cartItem.style.transition = 'all 0.3s ease';
+        cartItem.style.opacity = '0';
+        cartItem.style.transform = 'translateX(-100px)';
+        
+        setTimeout(() => {
+            cartItem.remove();
+            updateCartSummary();
+            
+            // Check if cart is empty
+            const remainingItems = document.querySelectorAll('.cart-item').length;
+            if (remainingItems === 0) {
+                showEmptyCart();
+            }
+        }, 300);
+    }
+}
+
+function applyCoupon() {
+    const couponCode = document.getElementById('couponCode').value.toUpperCase();
+    const validCoupons = {
+        'WELCOME10': 10,
+        'SUMMER20': 20,
+        'STUDENT15': 15
+    };
+    
+    if (validCoupons[couponCode]) {
+        const discountPercent = validCoupons[couponCode];
+        const subtotal = parseFloat(document.getElementById('subtotal').textContent.replace('₺', '').replace(',', ''));
+        const discountAmount = Math.round(subtotal * discountPercent / 100);
+        
+        document.getElementById('discount').textContent = '₺' + discountAmount.toLocaleString('tr-TR');
+        document.getElementById('discountRow').style.display = 'flex';
+        
+        // Show success message
+        const couponSection = document.querySelector('.coupon-section');
+        couponSection.innerHTML = `
+            <div class="alert alert-success mb-0">
+                <i class="fas fa-check-circle me-2"></i>
+                Kupon başarıyla uygulandı! %${discountPercent} indirim kazandınız.
+            </div>
+        `;
+        
+        updateCartSummary();
+    } else {
+        // Show error message
+        const couponInput = document.getElementById('couponCode');
+        couponInput.classList.add('is-invalid');
+        
+        setTimeout(() => {
+            couponInput.classList.remove('is-invalid');
+        }, 3000);
+        
+        alert('Geçersiz kupon kodu!');
+    }
+}
+
+function goToCheckout() {
+    // Animate button
+    const btn = document.querySelector('.checkout-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Yönlendiriliyor...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        window.location.href = '{% url "checkout" %}';
+    }, 1500);
+}
+
+function showEmptyCart() {
+    document.querySelector('.row').style.display = 'none';
+    document.getElementById('emptyCartTemplate').classList.remove('d-none');
+}
+
+// Initialize cart
+document.addEventListener('DOMContentLoaded', function() {
+    updateCartSummary();
+});
+</script>
+{% endblock %}

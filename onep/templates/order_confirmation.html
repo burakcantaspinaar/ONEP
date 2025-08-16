@@ -1,0 +1,620 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sipariş Onayı - ONEP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content {
+        padding-top: 100px;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    .confirmation-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .confirmation-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .success-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        animation: successPulse 1.5s ease-in-out;
+    }
+    
+    .success-icon i {
+        font-size: 3rem;
+        color: white;
+    }
+    
+    @keyframes successPulse {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    .order-number {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 50px;
+        display: inline-block;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin: 20px 0;
+    }
+    
+    .order-details {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .detail-section {
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .detail-section h6 {
+        color: #667eea;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    
+    .order-item:hover {
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 10px;
+    }
+    
+    .item-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-right: 15px;
+    }
+    
+    .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .tracking-steps {
+        display: flex;
+        justify-content: space-between;
+        margin: 30px 0;
+        position: relative;
+    }
+    
+    .tracking-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        position: relative;
+    }
+    
+    .tracking-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .tracking-step.completed .tracking-circle {
+        background: #28a745;
+        color: white;
+    }
+    
+    .tracking-step.current .tracking-circle {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        animation: pulse 2s infinite;
+    }
+    
+    .tracking-line {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        right: -50%;
+        height: 2px;
+        background: #e9ecef;
+        z-index: 1;
+    }
+    
+    .tracking-step:last-child .tracking-line {
+        display: none;
+    }
+    
+    .tracking-step.completed .tracking-line {
+        background: #28a745;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 30px;
+    }
+    
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 50px;
+        padding: 12px 30px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-outline-custom {
+        border: 2px solid #667eea;
+        color: #667eea;
+        background: white;
+        border-radius: 50px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-custom:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .summary-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .summary-row:last-child {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-top: 10px;
+        padding-top: 15px;
+    }
+    
+    .estimated-delivery {
+        background: #e8f5e8;
+        border-left: 4px solid #28a745;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+    }
+    
+    .contact-info {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    .floating-elements {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    
+    .floating-element {
+        position: absolute;
+        color: rgba(102, 126, 234, 0.1);
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    .floating-element:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+    .floating-element:nth-child(2) { top: 20%; right: 15%; animation-delay: 1s; }
+    .floating-element:nth-child(3) { bottom: 15%; left: 20%; animation-delay: 2s; }
+    .floating-element:nth-child(4) { bottom: 25%; right: 10%; animation-delay: 3s; }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Success Confirmation -->
+    <div class="confirmation-container">
+        <div class="floating-elements">
+            <i class="fas fa-star floating-element"></i>
+            <i class="fas fa-heart floating-element"></i>
+            <i class="fas fa-gift floating-element"></i>
+            <i class="fas fa-thumbs-up floating-element"></i>
+        </div>
+        
+        <div class="success-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        
+        <h2 class="fw-bold text-success mb-3">Siparişiniz Başarıyla Alındı!</h2>
+        <p class="lead text-muted mb-4">
+            Teşekkür ederiz! Siparişiniz işleme alınmıştır ve en kısa sürede size ulaştırılacaktır.
+        </p>
+        
+        <div class="order-number">
+            <i class="fas fa-hashtag me-2"></i>
+            Sipariş No: <span id="orderNumber">ONEP-2025-000123</span>
+        </div>
+        
+        <p class="text-muted mt-3">
+            Sipariş durumunuzu e-posta ve SMS ile takip edebilirsiniz.
+        </p>
+    </div>
+
+    <div class="row">
+        <!-- Order Details -->
+        <div class="col-lg-8">
+            <div class="order-details">
+                <h5 class="fw-bold mb-4 text-gradient">
+                    <i class="fas fa-clipboard-list me-2"></i>
+                    Sipariş Detayları
+                </h5>
+
+                <!-- Order Items -->
+                <div class="detail-section">
+                    <h6>
+                        <i class="fas fa-box me-2"></i>
+                        Sipariş Edilen Ürünler
+                    </h6>
+                    
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/60x60/667eea/ffffff?text=L" alt="Gaming Laptop Pro">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Gaming Laptop Pro</h6>
+                            <p class="text-muted small mb-0">Intel i7, RTX 4060, 16GB RAM</p>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold">₺15,999</div>
+                            <small class="text-muted">Adet: 1</small>
+                        </div>
+                    </div>
+
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/60x60/764ba2/ffffff?text=T" alt="Premium T-Shirt">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Premium T-Shirt</h6>
+                            <p class="text-muted small mb-0">%100 Pamuk, L Beden, Mavi</p>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold">₺398</div>
+                            <small class="text-muted">Adet: 2</small>
+                        </div>
+                    </div>
+
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://via.placeholder.com/60x60/28a745/ffffff?text=K" alt="Modern Koltuk">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Modern Koltuk</h6>
+                            <p class="text-muted small mb-0">Konforlu ve şık tasarım, Gri</p>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold">₺2,499</div>
+                            <small class="text-muted">Adet: 1</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Information -->
+                <div class="detail-section">
+                    <h6>
+                        <i class="fas fa-shipping-fast me-2"></i>
+                        Teslimat Bilgileri
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Alıcı:</strong> Ahmet Yılmaz</p>
+                            <p class="mb-1"><strong>Telefon:</strong> 0555 123 4567</p>
+                            <p class="mb-1"><strong>E-posta:</strong> ahmet@example.com</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Adres:</strong></p>
+                            <p class="text-muted">
+                                Atatürk Mahallesi, 123. Sokak, No: 45/7<br>
+                                Kadıköy / İstanbul<br>
+                                34000
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Information -->
+                <div class="detail-section">
+                    <h6>
+                        <i class="fas fa-credit-card me-2"></i>
+                        Ödeme Bilgileri
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Ödeme Yöntemi:</strong> Kredi Kartı</p>
+                            <p class="mb-1"><strong>Kart:</strong> **** **** **** 3456</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Ödeme Durumu:</strong> 
+                                <span class="badge bg-success">Onaylandı</span>
+                            </p>
+                            <p class="mb-1"><strong>İşlem Tarihi:</strong> 09.08.2025 14:35</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Tracking -->
+                <div class="detail-section">
+                    <h6>
+                        <i class="fas fa-route me-2"></i>
+                        Sipariş Takibi
+                    </h6>
+                    
+                    <div class="tracking-steps">
+                        <div class="tracking-step completed">
+                            <div class="tracking-circle">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <small class="text-center">
+                                <strong>Sipariş Alındı</strong><br>
+                                <span class="text-muted">09.08.2025 14:35</span>
+                            </small>
+                            <div class="tracking-line"></div>
+                        </div>
+                        <div class="tracking-step current">
+                            <div class="tracking-circle">2</div>
+                            <small class="text-center">
+                                <strong>Hazırlanıyor</strong><br>
+                                <span class="text-muted">Tahmini: 1-2 saat</span>
+                            </small>
+                            <div class="tracking-line"></div>
+                        </div>
+                        <div class="tracking-step">
+                            <div class="tracking-circle">3</div>
+                            <small class="text-center">
+                                <strong>Kargoya Verildi</strong><br>
+                                <span class="text-muted">Tahmini: Yarın</span>
+                            </small>
+                            <div class="tracking-line"></div>
+                        </div>
+                        <div class="tracking-step">
+                            <div class="tracking-circle">4</div>
+                            <small class="text-center">
+                                <strong>Teslim Edildi</strong><br>
+                                <span class="text-muted">1-3 gün</span>
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="estimated-delivery">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-truck text-success fs-4 me-3"></i>
+                            <div>
+                                <h6 class="mb-1 text-success">Tahmini Teslimat Tarihi</h6>
+                                <p class="mb-0"><strong>11-13 Ağustos 2025</strong> (1-3 iş günü)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary & Actions -->
+        <div class="col-lg-4">
+            <!-- Order Summary -->
+            <div class="summary-card mb-4">
+                <h5 class="fw-bold mb-3">
+                    <i class="fas fa-receipt me-2"></i>
+                    Ödeme Özeti
+                </h5>
+                
+                <div class="summary-row">
+                    <span>Ara Toplam:</span>
+                    <span>₺18,896</span>
+                </div>
+                <div class="summary-row">
+                    <span>Kargo:</span>
+                    <span>Ücretsiz</span>
+                </div>
+                <div class="summary-row">
+                    <span>KDV (%18):</span>
+                    <span>₺3,401</span>
+                </div>
+                <div class="summary-row">
+                    <span>Toplam Ödenen:</span>
+                    <span>₺22,297</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{% url 'order_history' %}" class="btn btn-primary-custom">
+                    <i class="fas fa-history me-2"></i>
+                    Sipariş Geçmişi
+                </a>
+                <a href="{% url 'product_list' %}" class="btn btn-outline-custom">
+                    <i class="fas fa-shopping-bag me-2"></i>
+                    Alışverişe Devam Et
+                </a>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="contact-info">
+                <h6 class="fw-bold mb-3">
+                    <i class="fas fa-headset me-2 text-primary"></i>
+                    Yardıma mı ihtiyacınız var?
+                </h6>
+                <p class="mb-2">
+                    <i class="fas fa-phone me-2 text-success"></i>
+                    <strong>0850 123 45 67</strong>
+                </p>
+                <p class="mb-2">
+                    <i class="fas fa-envelope me-2 text-info"></i>
+                    <strong>destek@onep.com</strong>
+                </p>
+                <p class="mb-0">
+                    <i class="fas fa-clock me-2 text-warning"></i>
+                    <small>7/24 Canlı Destek</small>
+                </p>
+            </div>
+
+            <!-- Social Share -->
+            <div class="text-center mt-4">
+                <h6 class="fw-bold mb-3">Deneyiminizi Paylaşın</h6>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="#" class="btn btn-outline-primary btn-sm">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="btn btn-outline-info btn-sm">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="btn btn-outline-danger btn-sm">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="btn btn-outline-success btn-sm">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Generate random order number
+function generateOrderNumber() {
+    const year = new Date().getFullYear();
+    const randomNum = Math.floor(Math.random() * 999999).toString().padStart(6, '0');
+    return `ONEP-${year}-${randomNum}`;
+}
+
+// Set order number on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('orderNumber').textContent = generateOrderNumber();
+    
+    // Simulate order progress
+    setTimeout(() => {
+        updateOrderStatus();
+    }, 5000);
+});
+
+function updateOrderStatus() {
+    // This would normally be done via backend/AJAX
+    const currentStep = document.querySelector('.tracking-step.current');
+    const nextStep = currentStep.nextElementSibling;
+    
+    if (nextStep && nextStep.classList.contains('tracking-step')) {
+        currentStep.classList.remove('current');
+        currentStep.classList.add('completed');
+        currentStep.querySelector('.tracking-circle').innerHTML = '<i class="fas fa-check"></i>';
+        
+        nextStep.classList.add('current');
+    }
+}
+
+// Auto-refresh page for order updates (in real app, use WebSocket or polling)
+let autoRefresh = setInterval(() => {
+    // Check for order updates
+    console.log('Checking for order updates...');
+}, 30000); // Check every 30 seconds
+
+// Copy order number to clipboard
+document.getElementById('orderNumber').addEventListener('click', function() {
+    navigator.clipboard.writeText(this.textContent).then(() => {
+        // Show temporary tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'position-absolute bg-dark text-white p-2 rounded';
+        tooltip.style.cssText = 'top: -40px; left: 50%; transform: translateX(-50%); font-size: 12px; z-index: 1000;';
+        tooltip.textContent = 'Sipariş numarası kopyalandı!';
+        
+        this.style.position = 'relative';
+        this.appendChild(tooltip);
+        
+        setTimeout(() => {
+            tooltip.remove();
+        }, 2000);
+    });
+});
+</script>
+{% endblock %}

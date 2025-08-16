@@ -1,0 +1,54 @@
+/* ONEP - Dark Mode Enhancements (disabled) */
+
+/* This ensures dark mode is applied even if the main CSS has issues */
+/* Dark mode is disabled; keep selectors but without effect */
+body.dark-mode {}
+
+body.dark-mode .navbar {}
+
+body.dark-mode .navbar-brand {}
+
+body.dark-mode .card {}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {}
+
+body.dark-mode .form-control {}
+
+body.dark-mode .btn-outline-primary {}
+
+body.dark-mode .btn-outline-primary:hover {}
+
+body.dark-mode .nav-link,
+body.dark-mode .navbar-nav .nav-link {}
+
+body.dark-mode .navbar .form-control {}
+
+body.dark-mode .navbar .form-control:focus {}
+
+body.dark-mode .page-link {}
+
+body.dark-mode footer {}
+
+body.dark-mode .modal-content {}
+
+body.dark-mode .dropdown-menu {}
+
+body.dark-mode .dropdown-item {}
+
+body.dark-mode .dropdown-item:hover {}
+
+body.dark-mode .form-check-input:not(:checked) {}
+
+body.dark-mode .table {}
+
+body.dark-mode .table td,
+body.dark-mode .table th {}
+
+body.dark-mode .badge {}
+
+/* More elements can be added as needed */

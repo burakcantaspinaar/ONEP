@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Kayıt Ol - ONEP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .signup-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        padding-top: 80px;
+    }
+    
+    .signup-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .social-btn {
+        transition: all 0.3s ease;
+        border-radius: 50px;
+    }
+    
+    .social-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .form-control {
+        border-radius: 15px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 50px;
+        padding: 12px 40px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="signup-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="signup-card p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-dark">
+                            <i class="fas fa-user-plus text-primary me-2"></i>
+                            Hesap Oluştur
+                        </h2>
+                        <p class="text-muted">ONEP'e katılın ve alışverişe başlayın</p>
+                    </div>
+
+                    <form id="signupForm" method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>Hata!</strong> Lütfen aşağıdaki hataları düzeltin.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="id_first_name" class="form-label fw-semibold">
+                                <i class="fas fa-user me-2"></i>Ad
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.first_name.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_last_name" class="form-label fw-semibold">
+                                <i class="fas fa-user me-2"></i>Soyad
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.last_name.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label fw-semibold">
+                                <i class="fas fa-envelope me-2"></i>E-posta
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.email.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label fw-semibold">
+                                <i class="fas fa-at me-2"></i>Kullanıcı Adı
+                            </label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.username.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.username.help_text %}
+                                <small class="text-muted">{{ form.username.help_text|safe }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_password1" class="form-label fw-semibold">
+                                <i class="fas fa-lock me-2"></i>Şifre
+                            </label>
+                            <div class="input-group">
+                                {{ form.password1 }}
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword1">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password1.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.password1.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.password1.help_text %}
+                                <small class="text-muted">{{ form.password1.help_text|safe }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="id_password2" class="form-label fw-semibold">
+                                <i class="fas fa-lock me-2"></i>Şifre Tekrar
+                            </label>
+                            <div class="input-group">
+                                {{ form.password2 }}
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password2.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.password2.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="agreeTerms" required>
+                            <label class="form-check-label" for="agreeTerms">
+                                <a href="#" class="text-decoration-none">Kullanım Şartları</a> ve 
+                                <a href="#" class="text-decoration-none">Gizlilik Politikası</a>'nı kabul ediyorum
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-4">
+                            <i class="fas fa-user-plus me-2"></i>Hesap Oluştur
+                        </button>
+                    </form>
+
+                    <div class="text-center mb-3">
+                        <span class="text-muted">veya</span>
+                    </div>
+
+                    <!-- Social Media Login -->
+                    <div class="d-grid gap-2 mb-4">
+                        <button class="btn btn-outline-danger social-btn">
+                            <i class="fab fa-google me-2"></i>Google ile Kayıt Ol
+                        </button>
+                        <button class="btn btn-outline-primary social-btn">
+                            <i class="fab fa-facebook-f me-2"></i>Facebook ile Kayıt Ol
+                        </button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-muted">
+                            Zaten hesabınız var mı? 
+                            <a href="{% url 'login' %}" class="text-decoration-none fw-semibold">Giriş Yapın</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Şifre göster/gizle fonksiyonu
+    function setupPasswordToggle(toggleBtnId, passwordFieldId) {
+        const toggleBtn = document.getElementById(toggleBtnId);
+        const passwordField = document.getElementById(passwordFieldId);
+        
+        if (toggleBtn && passwordField) {
+            toggleBtn.addEventListener('click', function() {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+                
+                const icon = this.querySelector('i');
+                if (type === 'text') {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        }
+    }
+    
+    // İki şifre alanı için toggle fonksiyonunu çalıştır
+    setupPasswordToggle('togglePassword1', 'id_password1');
+    setupPasswordToggle('togglePassword2', 'id_password2');
+    
+    // Form gönderimi sırasında loading durumu
+    const form = document.getElementById('signupForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    form.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Hesap Oluşturuluyor...';
+    });
+});
+</script>
+{% endblock %}

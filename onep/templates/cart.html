@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sepetim - ONEP{% endblock %}
+
+{% block extra_css %}
+<!-- Mevcut CSS stilleri korundu -->
+<style>
+    /* Ana layout stilleri */
+    .main-content {
+        padding-top: 100px;
+        min-height: 100vh;
+        background: #f8f9fa;
+    }
+    
+    /* Ürün görseli stilleri */
+    .product-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+    }
+    
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    
+    .product-image-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        border: 2px solid #e9ecef;
+    }
+    
+    /* Diğer mevcut stiller */
+    .cart-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    /* Toast mesajı için stil */
+    #toast-container {
+        z-index: 1060;
+    }
+    
+    /* Transition ekle */
+    .row.cart-item {
+        transition: opacity 0.3s ease;
+    }
+    
+    /* Miktar kontrol butonları */
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        margin-right: 30px; /* Fiyattan uzaklaştırmak için */
+    }
+    
+    .quantity-control .btn {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .quantity-input {
+        width: 50px;
+        text-align: center;
+        margin: 0 8px;
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+    }
+    
+    /* Fiyat alanları */
+    .price-column {
+        text-align: right;
+        padding-right: 20px;
+    }
+    .price-column .fw-bold {
+        white-space: nowrap;
+    }
+    
+    .price-label {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 4px;
+    }
+    
+    /* Sil butonu */
+    .remove-btn {
+        background-color: #ff5252;
+        color: white;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .remove-btn:hover {
+        background-color: #ff1a1a;
+    }
+    
+    /* Cart item düzenlemesi */
+    .cart-item {
+        padding: 20px 0;
+        margin-bottom: 10px;
+    }
+    
+    .cart-item:last-child {
+        border-bottom: none !important;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .cart-item {
+            text-align: center;
+        }
+        
+        .cart-item .col-md-2,
+        .cart-item .col-md-3,
+        .cart-item .col-md-1 {
+            margin-bottom: 15px;
+        }
+        
+        .quantity-control {
+            justify-content: center;
+            margin-right: 0;
+        }
+        
+        .price-column {
+            text-align: center;
+            padding-right: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 mb-4">
+                <h2 class="fw-bold text-primary">
+                    <i class="fas fa-shopping-cart me-3"></i>Sepetim
+                </h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Ana Sayfa</a></li>
+                        <li class="breadcrumb-item active">Sepet</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        {% if sepet_urunleri %}
+        <div class="cart-container">
+            {% for item in sepet_urunleri %}
+            <div class="row cart-item align-items-center border-bottom">
+                <!-- Ürün Görseli -->
+                <div class="col-6 col-md-2 mb-3 mb-md-0">
+                    <div class="d-flex justify-content-center justify-content-md-start">
+                        {% if item.resim_url %}
+                        <div class="product-image">
+                            <img src="{{ item.resim_url }}" alt="{{ item.urun.urun_adi }}">
+                        </div>
+                        {% else %}
+                        <div class="product-image-placeholder">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Ürün Bilgileri -->
+                <div class="col-6 col-md-3 mb-3 mb-md-0">
+                    <h5 class="mb-0">{{ item.urun.urun_adi }}</h5>
+                    <p class="text-muted mb-0">{{ item.urun.kategori }}</p>
+                    <small class="text-success">Stok: {{ item.urun.stok_adedi }} adet</small>
+                </div>
+
+                <!-- Miktar Kontrolleri -->
+                <div class="col-12 col-md-3 mb-3 mb-md-0">
+                    <form action="{% url 'sepet_guncelle' item.urun.id %}" method="post" class="quantity-control" data-urun-id="{{ item.urun.id }}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="">
+                        <button type="button" name="decrease" class="btn btn-primary">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="text" class="quantity-input" value="{{ item.miktar }}" readonly>
+                        <button type="button" name="increase" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Fiyatlar -->
+                <div class="col-6 col-md-2 mb-2 mb-md-0 price-column">
+                    <div class="fw-bold text-primary">{{ item.urun.fiyat|floatformat:2 }} ₺</div>
+                    <div class="price-label">Birim Fiyat</div>
+                </div>
+                
+                <div class="col-6 col-md-1 mb-2 mb-md-0 price-column">
+                    <div class="fw-bold text-primary">{{ item.ara_toplam|floatformat:2 }} ₺</div>
+                    <div class="price-label">Toplam</div>
+                </div>
+
+                <!-- Sil Butonu -->
+                <div class="col-12 col-md-1 text-center">
+                    <form action="{% url 'sepetten_sil' item.urun.id %}" method="post" class="remove-cart-form" data-urun-adi="{{ item.urun.urun_adi }}">
+                        {% csrf_token %}
+                        <button type="submit" class="remove-btn">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Sipariş Özeti -->
+        <div class="row">
+            <div class="col-md-8"></div>
+            <div class="col-md-4">
+                <div class="cart-container">
+                    <h4 class="mb-4">
+                        <i class="fas fa-receipt me-2"></i>
+                        Sipariş Özeti
+                    </h4>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Ara Toplam:</span>
+                        <span class="fw-bold cart-summary-subtotal">{{ toplam_tutar|floatformat:2 }} ₺</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Kargo:</span>
+                        <span class="text-success">Ücretsiz</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>KDV (%18):</span>
+                        <span class="cart-summary-tax">{{ kdv_tutari|floatformat:2 }} ₺</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="fw-bold">Genel Toplam:</span>
+                        <span class="fw-bold text-primary cart-summary-total">{{ genel_toplam|floatformat:2 }} ₺</span>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'checkout' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-credit-card me-2"></i>
+                            Ödeme Yap
+                        </a>
+                        <a href="{% url 'product_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Alışverişe Devam Et
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="cart-container text-center py-5">
+            <i class="fas fa-shopping-cart fa-4x text-muted mb-4"></i>
+            <h3 class="mb-3">Sepetiniz boş</h3>
+            <p class="text-muted mb-4">Henüz sepetinize ürün eklemediniz.</p>
+            <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-store me-2"></i>
+                Alışverişe Başla
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% load static %}{% static 'js/cart-ajax.js' %}"></script>
+{% endblock %}

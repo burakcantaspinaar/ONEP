@@ -1,0 +1,648 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ödeme - ONEP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content {
+        padding-top: 100px;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    .checkout-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+    
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        flex: 1;
+        max-width: 200px;
+    }
+    
+    .step-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .step.active .step-circle {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .step.completed .step-circle {
+        background: #28a745;
+        color: white;
+    }
+    
+    .step-line {
+        position: absolute;
+        top: 25px;
+        left: 50%;
+        right: -50%;
+        height: 2px;
+        background: #e9ecef;
+        z-index: 1;
+    }
+    
+    .step:last-child .step-line {
+        display: none;
+    }
+    
+    .step.completed .step-line {
+        background: #28a745;
+    }
+    
+    .form-section {
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-section:hover {
+        border-color: #667eea;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-section h5 {
+        color: #667eea;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .payment-method {
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .payment-method:hover {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.05);
+    }
+    
+    .payment-method.selected {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.1);
+    }
+    
+    .payment-method input[type="radio"] {
+        margin-right: 15px;
+        transform: scale(1.2);
+    }
+    
+    .order-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        position: sticky;
+        top: 120px;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .summary-item:last-child {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-top: 15px;
+        padding-top: 20px;
+    }
+    
+    .place-order-btn {
+        background: white;
+        color: #667eea;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 30px;
+        font-weight: bold;
+        width: 100%;
+        margin-top: 20px;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+    
+    .place-order-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+        background: #f8f9fa;
+    }
+    
+    .place-order-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+    
+    .security-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    .development-notice {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        text-align: center;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
+    }
+    
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(102, 126, 234, 0.9);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        color: white;
+        text-align: center;
+    }
+    
+    .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 6px solid rgba(255, 255, 255, 0.3);
+        border-top: 6px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div>
+        <div class="loading-spinner"></div>
+        <h4>Siparişiniz İşleniyor...</h4>
+        <p>Lütfen bekleyiniz, sayfayı kapatmayınız.</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Development Notice -->
+    <div class="development-notice">
+        <h4 class="fw-bold mb-2">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Geliştirme Aşamasında
+        </h4>
+        <p class="mb-0">
+            Ödeme entegrasyonu şu anda geliştirme aşamasında. Bu sayfa demo amaçlıdır ve gerçek ödeme işlemi yapılmayacaktır.
+        </p>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h2 class="fw-bold text-gradient">
+                <i class="fas fa-credit-card me-3"></i>Ödeme
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'product_list' %}" class="text-decoration-none">Ana Sayfa</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'cart' %}" class="text-decoration-none">Sepet</a>
+                    </li>
+                    <li class="breadcrumb-item active">Ödeme</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step completed">
+            <div class="step-circle">
+                <i class="fas fa-check"></i>
+            </div>
+            <span class="small fw-semibold">Sepet</span>
+            <div class="step-line"></div>
+        </div>
+        <div class="step active">
+            <div class="step-circle">2</div>
+            <span class="small fw-semibold">Ödeme</span>
+            <div class="step-line"></div>
+        </div>
+        <div class="step">
+            <div class="step-circle">3</div>
+            <span class="small fw-semibold">Onay</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Checkout Form -->
+        <div class="col-lg-8">
+            <form id="checkoutForm" method="post" action="{% url 'checkout' %}">
+                {% csrf_token %}
+                <!-- Shipping Information -->
+                <div class="form-section">
+                    <h5>
+                        <i class="fas fa-shipping-fast me-2"></i>
+                        Teslimat Bilgileri
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="firstName" class="form-label fw-semibold">Ad *</label>
+                            <input type="text" class="form-control" id="firstName" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lastName" class="form-label fw-semibold">Soyad *</label>
+                            <input type="text" class="form-control" id="lastName" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label fw-semibold">Telefon *</label>
+                            <input type="tel" class="form-control" id="phone" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label fw-semibold">E-posta *</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="address" class="form-label fw-semibold">Adres *</label>
+                            <textarea class="form-control" id="address" rows="3" required placeholder="Mahalle, sokak, bina no vb."></textarea>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="city" class="form-label fw-semibold">İl *</label>
+                            <select class="form-select" id="city" required>
+                                <option value="">İl seçiniz</option>
+                                <option value="istanbul">İstanbul</option>
+                                <option value="ankara">Ankara</option>
+                                <option value="izmir">İzmir</option>
+                                <option value="bursa">Bursa</option>
+                                <option value="antalya">Antalya</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="district" class="form-label fw-semibold">İlçe *</label>
+                            <select class="form-select" id="district" required>
+                                <option value="">İlçe seçiniz</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="zipCode" class="form-label fw-semibold">Posta Kodu</label>
+                            <input type="text" class="form-control" id="zipCode" placeholder="34000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="form-section">
+                    <h5>
+                        <i class="fas fa-credit-card me-2"></i>
+                        Ödeme Yöntemi
+                    </h5>
+                    
+                    <!-- Credit Card -->
+                    <div class="payment-method" onclick="selectPaymentMethod('card')">
+                        <div class="d-flex align-items-center">
+                            <input type="radio" name="paymentMethod" id="cardPayment" value="card">
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-1">Kredi/Banka Kartı</h6>
+                                <p class="text-muted small mb-0">Visa, Mastercard, American Express</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <i class="fab fa-cc-visa fs-4 text-primary"></i>
+                                <i class="fab fa-cc-mastercard fs-4 text-warning"></i>
+                                <i class="fab fa-cc-amex fs-4 text-info"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bank Transfer -->
+                    <div class="payment-method" onclick="selectPaymentMethod('transfer')">
+                        <div class="d-flex align-items-center">
+                            <input type="radio" name="paymentMethod" id="transferPayment" value="transfer">
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-1">Banka Havalesi</h6>
+                                <p class="text-muted small mb-0">Havale/EFT ile ödeme (1-2 iş günü)</p>
+                            </div>
+                            <i class="fas fa-university fs-4 text-success"></i>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Payment -->
+                    <div class="payment-method" onclick="selectPaymentMethod('mobile')">
+                        <div class="d-flex align-items-center">
+                            <input type="radio" name="paymentMethod" id="mobilePayment" value="mobile">
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-1">Mobil Ödeme</h6>
+                                <p class="text-muted small mb-0">QR kod ile hızlı ödeme</p>
+                            </div>
+                            <i class="fas fa-mobile-alt fs-4 text-primary"></i>
+                        </div>
+                    </div>
+
+                    <!-- Card Details (Hidden by default) -->
+                    <div id="cardDetails" class="mt-4" style="display: none;">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="cardNumber" class="form-label fw-semibold">Kart Numarası</label>
+                                <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label for="cardName" class="form-label fw-semibold">Kart Üzerindeki İsim</label>
+                                <input type="text" class="form-control" id="cardName" placeholder="Ad Soyad">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="cardCvc" class="form-label fw-semibold">CVC</label>
+                                <input type="text" class="form-control" id="cardCvc" placeholder="123" maxlength="4">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cardMonth" class="form-label fw-semibold">Ay</label>
+                                <select class="form-select" id="cardMonth">
+                                    <option value="">Ay</option>
+                                    <option value="01">01</option>
+                                    <option value="02">02</option>
+                                    <option value="03">03</option>
+                                    <option value="04">04</option>
+                                    <option value="05">05</option>
+                                    <option value="06">06</option>
+                                    <option value="07">07</option>
+                                    <option value="08">08</option>
+                                    <option value="09">09</option>
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cardYear" class="form-label fw-semibold">Yıl</label>
+                                <select class="form-select" id="cardYear">
+                                    <option value="">Yıl</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                    <option value="2027">2027</option>
+                                    <option value="2028">2028</option>
+                                    <option value="2029">2029</option>
+                                    <option value="2030">2030</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Options -->
+                <div class="form-section">
+                    <h5>
+                        <i class="fas fa-cog me-2"></i>
+                        Ek Seçenekler
+                    </h5>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="saveInfo">
+                        <label class="form-check-label" for="saveInfo">
+                            Teslimat bilgilerimi kaydet
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="newsletter">
+                        <label class="form-check-label" for="newsletter">
+                            Kampanya ve duyurulardan haberdar olmak istiyorum
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="terms" required>
+                        <label class="form-check-label" for="terms">
+                            <a href="#" class="text-decoration-none">Kullanım Şartları</a> ve 
+                            <a href="#" class="text-decoration-none">Gizlilik Politikası</a>'nı kabul ediyorum *
+                        </label>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="order-summary">
+                <h5 class="fw-bold mb-4">
+                    <i class="fas fa-receipt me-2"></i>
+                    Sipariş Özeti
+                </h5>
+
+                <!-- Order Items -->
+                <div class="mb-4">
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom border-secondary">
+                        <img src="https://via.placeholder.com/60x60/667eea/ffffff?text=L" alt="Laptop" class="rounded me-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 small">Gaming Laptop Pro</h6>
+                            <small class="text-light">Adet: 1</small>
+                        </div>
+                        <span class="fw-bold">₺15,999</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom border-secondary">
+                        <img src="https://via.placeholder.com/60x60/764ba2/ffffff?text=T" alt="T-Shirt" class="rounded me-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 small">Premium T-Shirt</h6>
+                            <small class="text-light">Adet: 2</small>
+                        </div>
+                        <span class="fw-bold">₺398</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3 pb-3">
+                        <img src="https://via.placeholder.com/60x60/28a745/ffffff?text=K" alt="Koltuk" class="rounded me-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 small">Modern Koltuk</h6>
+                            <small class="text-light">Adet: 1</small>
+                        </div>
+                        <span class="fw-bold">₺2,499</span>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="summary-item">
+                    <span>Ara Toplam:</span>
+                    <span>₺18,896</span>
+                </div>
+                <div class="summary-item">
+                    <span>Kargo:</span>
+                    <span class="text-success">Ücretsiz</span>
+                </div>
+                <div class="summary-item">
+                    <span>KDV (%18):</span>
+                    <span>₺3,401</span>
+                </div>
+                <div class="summary-item">
+                    <span>Toplam:</span>
+                    <span>₺22,297</span>
+                </div>
+
+                <button type="submit" form="checkoutForm" class="place-order-btn" id="placeOrderBtn">
+                    <i class="fas fa-lock me-2"></i>
+                    Siparişi Tamamla
+                </button>
+
+                <div class="security-info">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-shield-alt text-success me-2"></i>
+                        <small class="fw-semibold">Güvenli Ödeme</small>
+                    </div>
+                    <small class="text-muted">
+                        Tüm ödeme bilgileriniz SSL ile şifrelenmektedir
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectPaymentMethod(method) {
+    // Remove selected class from all payment methods
+    document.querySelectorAll('.payment-method').forEach(el => {
+        el.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked method
+    event.currentTarget.classList.add('selected');
+    
+    // Check the radio button
+    document.getElementById(method + 'Payment').checked = true;
+    
+    // Show/hide card details
+    const cardDetails = document.getElementById('cardDetails');
+    if (method === 'card') {
+        cardDetails.style.display = 'block';
+        cardDetails.querySelectorAll('input, select').forEach(input => {
+            input.required = true;
+        });
+    } else {
+        cardDetails.style.display = 'none';
+        cardDetails.querySelectorAll('input, select').forEach(input => {
+            input.required = false;
+        });
+    }
+}
+
+// Format card number
+document.getElementById('cardNumber').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+    e.target.value = formattedValue;
+});
+
+// Handle form submission
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Show loading overlay
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    // Simulate payment processing
+    setTimeout(() => {
+        // Hide loading overlay
+        document.getElementById('loadingOverlay').style.display = 'none';
+        
+        // Submit the checkout form
+        document.getElementById('checkoutForm').submit();
+    }, 2000);
+});
+
+// City-District dependency
+document.getElementById('city').addEventListener('change', function() {
+    const districtSelect = document.getElementById('district');
+    const districts = {
+        'istanbul': ['Kadıköy', 'Beşiktaş', 'Şişli', 'Beyoğlu', 'Fatih'],
+        'ankara': ['Çankaya', 'Keçiören', 'Yenimahalle', 'Mamak', 'Etimesgut'],
+        'izmir': ['Konak', 'Karşıyaka', 'Bornova', 'Buca', 'Bayraklı'],
+        'bursa': ['Osmangazi', 'Nilüfer', 'Yıldırım', 'Mudanya', 'Gemlik'],
+        'antalya': ['Muratpaşa', 'Kepez', 'Konyaaltı', 'Aksu', 'Döşemealtı']
+    };
+    
+    districtSelect.innerHTML = '<option value="">İlçe seçiniz</option>';
+    
+    if (this.value && districts[this.value]) {
+        districts[this.value].forEach(district => {
+            const option = document.createElement('option');
+            option.value = district.toLowerCase().replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ü/g, 'u');
+            option.textContent = district;
+            districtSelect.appendChild(option);
+        });
+    }
+});
+
+// Auto-fill demo data (for testing)
+function fillDemoData() {
+    document.getElementById('firstName').value = 'Ahmet';
+    document.getElementById('lastName').value = 'Yılmaz';
+    document.getElementById('phone').value = '0555 123 4567';
+    document.getElementById('email').value = 'ahmet@example.com';
+    document.getElementById('address').value = 'Atatürk Mahallesi, 123. Sokak, No: 45/7';
+    document.getElementById('city').value = 'istanbul';
+    document.getElementById('city').dispatchEvent(new Event('change'));
+    setTimeout(() => {
+        document.getElementById('district').value = 'kadikoy';
+    }, 100);
+    document.getElementById('zipCode').value = '34000';
+}
+
+// Add demo data button (for development)
+document.addEventListener('DOMContentLoaded', function() {
+    const demoBtn = document.createElement('button');
+    demoBtn.type = 'button';
+    demoBtn.className = 'btn btn-outline-secondary btn-sm mb-3';
+    demoBtn.innerHTML = '<i class="fas fa-magic me-1"></i>Demo Veri Doldur';
+    demoBtn.onclick = fillDemoData;
+    
+    document.querySelector('.form-section').appendChild(demoBtn);
+});
+</script>
+{% endblock %}

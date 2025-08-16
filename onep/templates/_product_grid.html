@@ -1,0 +1,131 @@
+<!-- Modern Products Grid -->
+<div class="row" id="productsGrid">
+    {% for urun in urunler %}
+    <div class="col-lg-3 col-md-4 col-sm-6 mb-4" data-category="{{ urun.kategori|lower }}">
+        <div class="card product-card pulse-hover">
+            <div class="product-image">
+                <img src="{{ urun.resim_url }}" alt="{{ urun.urun_adi }}" 
+                     onerror="this.src='https://via.placeholder.com/300x250/2563EB/ffffff?text={{ urun.urun_adi|urlencode }}'">
+                <div class="price-tag">₺{{ urun.fiyat|floatformat:0 }}</div>
+                <div class="product-overlay">
+                    <div class="text-center">
+                        <a href="{% url 'product_detail' urun.id %}" class="btn btn-light btn-sm me-2" title="Detay Görüntüle">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <button class="btn btn-light btn-sm" title="Favorilere Ekle">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Stock indicator badge -->
+                {% if urun.stok_adedi <= 5 and urun.stok_adedi > 0 %}
+                <div class="position-absolute top-0 start-0 m-2">
+                    <span class="badge bg-warning text-dark">Son {{ urun.stok_adedi }} Adet!</span>
+                </div>
+                {% elif urun.stok_adedi <= 0 %}
+                <div class="position-absolute top-0 start-0 m-2">
+                    <span class="badge bg-danger">Tükendi</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body d-flex flex-column">
+                <h6 class="card-title fw-bold text-truncate" title="{{ urun.urun_adi }}">{{ urun.urun_adi }}</h6>
+                <p class="card-text text-muted small flex-grow-1">{{ urun.aciklama|truncatechars:60 }}</p>
+                
+                <!-- Modern rating display -->
+                <div class="rating-stars mb-3">
+                    {% for i in "12345" %}
+                        <i class="fas fa-star text-warning"></i>
+                    {% endfor %}
+                    <span class="text-muted ms-1">(4.8)</span>
+                </div>
+                
+                <!-- Modern stock status and add to cart -->
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    {% if urun.stok_adedi > 5 %}
+                        <span class="badge bg-success">Stokta</span>
+                    {% elif urun.stok_adedi > 0 %}
+                        <span class="badge bg-warning text-dark">{{ urun.stok_adedi }} Kaldı</span>
+                    {% else %}
+                        <span class="badge bg-danger">Tükendi</span>
+                    {% endif %}
+                    
+                    <form action="{% url 'sepete_ekle' urun.id %}" method="post" class="add-to-cart-form" data-urun-adi="{{ urun.urun_adi }}">
+                        {% csrf_token %}
+                        <input type="hidden" name="urun_id" value="{{ urun.id }}">
+                        <button type="submit" class="btn btn-primary btn-sm" 
+                                {% if urun.stok_adedi <= 0 %}disabled{% endif %}
+                                title="Sepete Ekle">
+                            <i class="fas fa-shopping-cart me-1"></i>
+                            <span class="d-none d-lg-inline">Sepete Ekle</span>
+                            <span class="d-lg-none">Ekle</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-search fa-4x text-muted opacity-50"></i>
+            </div>
+            <h4 class="text-muted mb-3">Henüz ürün bulunmuyor</h4>
+            <p class="text-muted">Lütfen daha sonra tekrar kontrol edin veya farklı arama kriterleri deneyin.</p>
+            <a href="{% url 'product_list' %}" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Ana Sayfaya Dön
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modern Pagination -->
+<div class="pagination-container">
+    {% if urunler.paginator.num_pages > 1 %}
+    <nav aria-label="Sayfa navigasyonu" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if urunler.has_previous %}
+            <li class="page-item">
+                <a class="page-link rounded-pill me-1" href="?page={{ urunler.previous_page_number }}{% if secili_kategori %}&kategori={{ secili_kategori }}{% endif %}{% if secili_siralama %}&siralama={{ secili_siralama }}{% endif %}{% if arama %}&arama={{ arama }}{% endif %}" aria-label="Önceki">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link rounded-pill me-1" tabindex="-1">
+                    <i class="fas fa-chevron-left"></i>
+                </span>
+            </li>
+            {% endif %}
+            
+            {% for num in urunler.paginator.page_range %}
+                {% if urunler.number == num %}
+                <li class="page-item active">
+                    <span class="page-link rounded-pill mx-1">{{ num }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link rounded-pill mx-1" href="?page={{ num }}{% if secili_kategori %}&kategori={{ secili_kategori }}{% endif %}{% if secili_siralama %}&siralama={{ secili_siralama }}{% endif %}{% if arama %}&arama={{ arama }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if urunler.has_next %}
+            <li class="page-item">
+                <a class="page-link rounded-pill ms-1" href="?page={{ urunler.next_page_number }}{% if secili_kategori %}&kategori={{ secili_kategori }}{% endif %}{% if secili_siralama %}&siralama={{ secili_siralama }}{% endif %}{% if arama %}&arama={{ arama }}{% endif %}" aria-label="Sonraki">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link rounded-pill ms-1" tabindex="-1">
+                    <i class="fas fa-chevron-right"></i>
+                </span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>

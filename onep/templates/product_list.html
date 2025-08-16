@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ürünler - ONEP{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cart-ajax.js' %}"></script>
+<script src="{% static 'js/product-filter-ajax.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content {
+        padding-top: 100px;
+        min-height: 100vh;
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 60px 0;
+        margin-bottom: 40px;
+    }
+    
+    .category-filter {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .filter-btn {
+        border-radius: 25px;
+        padding: 8px 20px;
+        margin: 5px;
+        border: 2px solid #e9ecef;
+        background: white;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-btn:hover, .filter-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+    
+    .product-card {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        height: 100%;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+    
+    .product-image {
+        position: relative;
+        overflow: hidden;
+        height: 250px;
+    }
+    
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: all 0.3s ease;
+    }
+    
+    .product-card:hover .product-image img {
+        transform: scale(1.1);
+    }
+    
+    .product-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(102, 126, 234, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+    
+    .product-card:hover .product-overlay {
+        opacity: 1;
+    }
+    
+    .price-tag {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+    
+    .rating-stars {
+        color: #ffc107;
+    }
+    
+    .btn-add-cart {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 25px;
+        padding: 10px 25px;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-add-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .sort-dropdown {
+        border-radius: 15px;
+        border: 2px solid #e9ecef;
+    }
+    
+    .pagination .page-link {
+        border-radius: 10px;
+        margin: 0 2px;
+        border: none;
+        color: #333;
+        background: #f8f9fa;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .pagination .page-link:hover {
+        background: #e9ecef;
+        color: #495057;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: #ff9800;
+        color: #fff;
+        border-color: #ff9800;
+        box-shadow: 0 2px 8px rgba(255,152,0,0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-3">En İyi Ürünleri Keşfedin</h1>
+                <p class="lead">Binlerce kaliteli ürün arasından size en uygun olanını bulun</p>
+                
+                <!-- Arama Formu -->
+                <div class="row mt-4">
+                    <div class="col-md-8">
+                        <form method="get" action="">
+                            {% if secili_kategori %}<input type="hidden" name="kategori" value="{{ secili_kategori }}">{% endif %}
+                            {% if secili_siralama %}<input type="hidden" name="siralama" value="{{ secili_siralama }}">{% endif %}
+                            <div class="input-group input-group-lg">
+                                <input type="text" class="form-control" name="arama" placeholder="Ürün ara..." value="{{ arama|default:'' }}">
+                                <button class="btn btn-warning" type="submit">
+                                    <i class="fas fa-search me-2"></i>Ara
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-shopping-bag" style="font-size: 8rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+        
+        {% if arama %}
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-search me-2"></i>
+                    "<strong>{{ arama }}</strong>" için arama sonuçları gösteriliyor.
+                    <a href="{% url 'product_list' %}" class="btn btn-sm btn-outline-primary ms-2">
+                        <i class="fas fa-times me-1"></i>Temizle
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<div class="container">
+    <!-- Category Filters -->
+    <div class="category-filter">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="mb-3 mb-md-0">
+                    <i class="fas fa-filter me-2 text-primary"></i>Kategoriler:
+                </h5>
+                <div class="d-flex flex-wrap">
+                    <a href="?" class="btn filter-btn {% if not secili_kategori %}active{% endif %}">
+                        <i class="fas fa-th-large me-2"></i>Tümü
+                    </a>
+                    {% for kategori in categories %}
+                    <a href="?kategori={{ kategori }}" class="btn filter-btn {% if secili_kategori == kategori %}active{% endif %}">
+                        {% if kategori == 'Telefon' %}<i class="fas fa-mobile-alt me-2"></i>
+                        {% elif kategori == 'Laptop' %}<i class="fas fa-laptop me-2"></i>
+                        {% elif kategori == 'Giyim' %}<i class="fas fa-tshirt me-2"></i>
+                        {% elif kategori == 'Ayakkabı' %}<i class="fas fa-shoe-prints me-2"></i>
+                        {% elif kategori == 'Kulaklık' %}<i class="fas fa-headphones me-2"></i>
+                        {% elif kategori == 'Akıllı Saat' %}<i class="fas fa-clock me-2"></i>
+                        {% else %}<i class="fas fa-tag me-2"></i>{% endif %}
+                        {{ kategori }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <form method="get" action="">
+                    {% if secili_kategori %}<input type="hidden" name="kategori" value="{{ secili_kategori }}">{% endif %}
+                    {% if arama %}<input type="hidden" name="arama" value="{{ arama }}">{% endif %}
+                    <select class="form-select sort-dropdown" name="siralama">
+                        <option value="-olusturulma_tarihi" {% if secili_siralama == '-olusturulma_tarihi' %}selected{% endif %}>En Yeniler</option>
+                        <option value="fiyat_artan" {% if secili_siralama == 'fiyat_artan' %}selected{% endif %}>Fiyat: Düşükten Yükseğe</option>
+                        <option value="fiyat_azalan" {% if secili_siralama == 'fiyat_azalan' %}selected{% endif %}>Fiyat: Yüksekten Düşüğe</option>
+                        <option value="isim_artan" {% if secili_siralama == 'isim_artan' %}selected{% endif %}>İsim: A-Z</option>
+                        <option value="isim_azalan" {% if secili_siralama == 'isim_azalan' %}selected{% endif %}>İsim: Z-A</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    {% include '_product_grid.html' %}
+</div>
+{% endblock %}

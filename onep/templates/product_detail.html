@@ -1,0 +1,669 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ürün Detayı - ONEP{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cart-ajax.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content {
+        padding-top: 100px;
+        min-height: 100vh;
+    }
+    
+    .product-image-gallery {
+        position: sticky;
+        top: 120px;
+    }
+    
+    .main-image {
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .main-image img {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        transition: all 0.3s ease;
+    }
+    
+    .thumbnail-images {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+    }
+    
+    .thumbnail {
+        min-width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 3px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .thumbnail.active {
+        border-color: #667eea;
+    }
+    
+    .thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .product-info {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .price-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .old-price {
+        text-decoration: line-through;
+        opacity: 0.7;
+        font-size: 0.9rem;
+    }
+    
+    .current-price {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .discount-badge {
+        background: #28a745;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .rating-section {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .rating-stars {
+        color: #ffc107;
+        font-size: 1.2rem;
+    }
+    
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .quantity-btn {
+        width: 40px;
+        height: 40px;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .quantity-btn:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    .quantity-input {
+        width: 60px;
+        text-align: center;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        height: 40px;
+    }
+    
+    .btn-add-to-cart {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 15px;
+        padding: 15px 30px;
+        color: white;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .btn-add-to-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .btn-wishlist {
+        border: 2px solid #dc3545;
+        color: #dc3545;
+        background: white;
+        border-radius: 15px;
+        padding: 15px 30px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-wishlist:hover {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .features-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .features-list li {
+        padding: 10px 0;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+    }
+    
+    .features-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .features-list i {
+        color: #28a745;
+        margin-right: 10px;
+        width: 20px;
+    }
+    
+    .reviews-section {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-top: 30px;
+    }
+    
+    .review-item {
+        border-bottom: 1px solid #e9ecef;
+        padding: 20px 0;
+    }
+    
+    .review-item:last-child {
+        border-bottom: none;
+    }
+    
+    .reviewer-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .reviewer-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        margin-right: 15px;
+    }
+    
+    .related-products {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-top: 30px;
+    }
+    
+    .related-product-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .related-product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-lg-6">
+            <div class="product-image-gallery">
+                <div class="main-image">
+                    {% if product.resim_url %}
+                        <img src="{{ product.resim_url }}" alt="{{ product.urun_adi }}" id="mainImage">
+                    {% else %}
+                        <img src="https://via.placeholder.com/500x400/667eea/ffffff?text={{ product.urun_adi|urlencode }}" alt="{{ product.urun_adi }}" id="mainImage">
+                    {% endif %}
+                </div>
+                <div class="thumbnail-images">
+                    <div class="thumbnail active">
+                        {% if product.resim_url %}
+                            <img src="{{ product.resim_url }}" alt="{{ product.urun_adi }} - Ana Görsel" onclick="changeMainImage(this.src)">
+                        {% else %}
+                            <img src="https://via.placeholder.com/80x80/667eea/ffffff?text=1" alt="{{ product.urun_adi }} - Ana Görsel" onclick="changeMainImage(this.src.replace('80x80', '500x400'))">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-lg-6">
+            <div class="product-info">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'product_list' %}" class="text-decoration-none">Ana Sayfa</a></li>
+                        {% if product.kategori %}
+                        <li class="breadcrumb-item"><a href="{% url 'product_list' %}?kategori={{ product.kategori|urlencode }}" class="text-decoration-none">{{ product.kategori }}</a></li>
+                        {% endif %}
+                        <li class="breadcrumb-item active">{{ product.urun_adi }}</li>
+                    </ol>
+                </nav>
+
+                <h1 class="fw-bold mb-3">{{ product.urun_adi }}</h1>
+                <p class="text-muted mb-4">{{ product.aciklama|truncatechars:100 }}</p>
+
+                <!-- Rating -->
+                <div class="rating-section">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="rating-stars mb-1">
+                                {% if ortalama_puan %}
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= ortalama_puan|floatformat:"0" %}
+                                            <i class="fas fa-star"></i>
+                                        {% elif forloop.counter <= ortalama_puan|add:"0.5"|floatformat:"0" %}
+                                            <i class="fas fa-star-half-alt"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span class="text-muted ms-2">{{ ortalama_puan|default:"0.0" }}/5</span>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <span class="text-muted ms-2">Henüz değerlendirme yok</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ reviews.count }} değerlendirme</small>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="tab" data-bs-target="#reviews">
+                            <i class="fas fa-comment me-1"></i>Yorum Yap
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Price -->
+                <div class="price-section">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div>
+                            <div class="current-price">₺{{ product.fiyat|floatformat:2 }}</div>
+                        </div>
+                        {% if product.stok_adedi > 0 %}
+                        <span class="discount-badge">Stokta</span>
+                        {% endif %}
+                    </div>
+                    <small><i class="fas fa-truck me-1"></i>Kargo bedava (1-3 iş günü)</small>
+                </div>
+
+                <!-- Stock Status -->
+                {% if product.stok_adedi > 0 %}
+                <div class="alert alert-success d-flex align-items-center mb-3">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span><strong>Stokta mevcut</strong> - Sadece {{ product.stok_adedi }} adet kaldı!</span>
+                </div>
+                {% else %}
+                <div class="alert alert-danger d-flex align-items-center mb-3">
+                    <i class="fas fa-times-circle me-2"></i>
+                    <span><strong>Stokta yok</strong> - Gelince haber ver</span>
+                </div>
+                {% endif %}
+
+                <!-- Features -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3">Özellikler:</h6>
+                    <ul class="features-list">
+                        <li><i class="fas fa-info-circle"></i>{{ product.aciklama|truncatewords:10 }}</li>
+                        {% if product.kategori %}
+                        <li><i class="fas fa-tag"></i>Kategori: {{ product.kategori }}</li>
+                        {% endif %}
+                        <li><i class="fas fa-cubes"></i>Stok Durumu: {{ product.stok_adedi }} adet</li>
+                        <li><i class="fas fa-calendar"></i>Eklenme: {{ product.olusturulma_tarihi|date:"d.m.Y" }}</li>
+                        <li><i class="fas fa-sync"></i>Son Güncelleme: {{ product.guncellenme_tarihi|date:"d.m.Y" }}</li>
+                        <li><i class="fas fa-barcode"></i>Ürün Kodu: {{ product.id }}</li>
+                    </ul>
+                </div>
+
+                <!-- Quantity Selector -->
+                <div class="quantity-selector">
+                    <label class="fw-semibold me-3">Miktar:</label>
+                    <button type="button" class="quantity-btn" onclick="decreaseQuantity()">-</button>
+                    <input type="number" class="form-control quantity-input" value="1" min="1" max="{{ product.stok_adedi }}" id="quantityInput" name="miktar">
+                    <button type="button" class="quantity-btn" onclick="increaseQuantity()">+</button>
+                </div>
+
+                <!-- Action Buttons -->
+                <form action="{% url 'sepete_ekle' product.id %}" method="post" class="add-to-cart-form" data-urun-adi="{{ product.urun_adi }}">
+                    {% csrf_token %}
+                    <input type="hidden" name="urun_id" value="{{ product.id }}">
+                    <input type="hidden" name="miktar" id="miktar_input" value="1">
+                    <button type="submit" class="btn btn-add-to-cart" {% if not product.stok_adedi > 0 %}disabled{% endif %}>
+                        <i class="fas fa-shopping-cart me-2"></i>Sepete Ekle - ₺{{ product.fiyat|floatformat:2 }}
+                    </button>
+                </form>
+                
+                <button class="btn btn-wishlist">
+                    <i class="fas fa-heart me-2"></i>Favorilere Ekle
+                </button>
+
+                <!-- Additional Info -->
+                <div class="mt-4 pt-4 border-top">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <i class="fas fa-shield-alt text-success fs-4 mb-2 d-block"></i>
+                            <small class="text-muted">2 Yıl Garanti</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="fas fa-undo text-primary fs-4 mb-2 d-block"></i>
+                            <small class="text-muted">14 Gün İade</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="fas fa-headset text-warning fs-4 mb-2 d-block"></i>
+                            <small class="text-muted">7/24 Destek</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Description & Reviews -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <ul class="nav nav-tabs mb-4" id="productTabs">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#description">
+                        <i class="fas fa-file-alt me-2"></i>Ürün Açıklaması
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reviews">
+                        <i class="fas fa-star me-2"></i>Değerlendirmeler (256)
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#specs">
+                        <i class="fas fa-cogs me-2"></i>Teknik Özellikler
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Description Tab -->
+                <div class="tab-pane fade show active" id="description">
+                    <div class="reviews-section">
+                        <h5 class="fw-bold mb-3">Ürün Açıklaması</h5>
+                        <p class="lead">{{ product.urun_adi }}</p>
+                        <div class="product-description">
+                            {{ product.aciklama|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews Tab -->
+                <div class="tab-pane fade" id="reviews">
+                    <div class="reviews-section">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold">Müşteri Değerlendirmeleri</h5>
+                            {% if user.is_authenticated %}
+                            <button class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Yorum Ekle
+                            </button>
+                            {% else %}
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Yorum yapmak için giriş yapın
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        {% if reviews %}
+                            {% for yorum in reviews %}
+                            <div class="review-item">
+                                <div class="reviewer-info">
+                                    <div class="reviewer-avatar">{{ yorum.kullanici.first_name|first|upper }}{{ yorum.kullanici.last_name|first|upper }}</div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">{{ yorum.kullanici.get_full_name|default:yorum.kullanici.username }}</h6>
+                                        <div class="rating-stars">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= yorum.puan %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <small class="text-muted">{{ yorum.olusturulma_tarihi|timesince }} önce</small>
+                                    </div>
+                                </div>
+                                <p class="mb-0">{{ yorum.yorum_metni }}</p>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>Bu ürün için henüz değerlendirme bulunmuyor. İlk değerlendirmeyi siz yapın!
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Specs Tab -->
+                <div class="tab-pane fade" id="specs">
+                    <div class="reviews-section">
+                        <h5 class="fw-bold mb-4">Teknik Özellikler</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table">
+                                    <tr><td class="fw-semibold">İşlemci:</td><td>Intel Core i7-12700H</td></tr>
+                                    <tr><td class="fw-semibold">RAM:</td><td>16GB DDR4</td></tr>
+                                    <tr><td class="fw-semibold">Depolama:</td><td>512GB NVMe SSD</td></tr>
+                                    <tr><td class="fw-semibold">Grafik Kartı:</td><td>NVIDIA RTX 4060 8GB</td></tr>
+                                    <tr><td class="fw-semibold">Ekran:</td><td>15.6" Full HD 144Hz</td></tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table">
+                                    <tr><td class="fw-semibold">İşletim Sistemi:</td><td>Windows 11 Home</td></tr>
+                                    <tr><td class="fw-semibold">Klavye:</td><td>RGB Mekanik</td></tr>
+                                    <tr><td class="fw-semibold">Ağırlık:</td><td>2.3 kg</td></tr>
+                                    <tr><td class="fw-semibold">Batarya:</td><td>6-8 saat</td></tr>
+                                    <tr><td class="fw-semibold">Garanti:</td><td>2 Yıl</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    <div class="related-products">
+        <h5 class="fw-bold mb-4">
+            <i class="fas fa-heart text-danger me-2"></i>Benzer Ürünler
+        </h5>
+        <div class="row">
+            {% if related_products %}
+                {% for related in related_products %}
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card related-product-card">
+                        {% if related.resim_url %}
+                            <img src="{{ related.resim_url }}" class="card-img-top" alt="{{ related.urun_adi }}">
+                        {% else %}
+                            <img src="https://via.placeholder.com/250x200/667eea/ffffff?text={{ related.urun_adi|urlencode }}" class="card-img-top" alt="{{ related.urun_adi }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h6 class="card-title">{{ related.urun_adi }}</h6>
+                            <p class="text-primary fw-bold">₺{{ related.fiyat|floatformat:2 }}</p>
+                            <a href="{% url 'product_detail' related.id %}" class="btn btn-sm btn-outline-primary mt-2 d-block">Detaylar</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Bu ürün için benzer ürün önerisi bulunmuyor.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function changeMainImage(src) {
+    document.getElementById('mainImage').src = src;
+    
+    // Update active thumbnail
+    document.querySelectorAll('.thumbnail').forEach(thumb => thumb.classList.remove('active'));
+    event.target.closest('.thumbnail').classList.add('active');
+}
+
+function increaseQuantity() {
+    const input = document.getElementById('quantityInput');
+    const maxValue = parseInt(input.getAttribute('max')) || 5;
+    const miktar_input = document.getElementById('miktar_input');
+    
+    if (parseInt(input.value) < maxValue) {
+        input.value = parseInt(input.value) + 1;
+        if (miktar_input) {
+            miktar_input.value = input.value;
+        }
+    }
+}
+
+function decreaseQuantity() {
+    const input = document.getElementById('quantityInput');
+    const miktar_input = document.getElementById('miktar_input');
+    
+    if (parseInt(input.value) > 1) {
+        input.value = parseInt(input.value) - 1;
+        if (miktar_input) {
+            miktar_input.value = input.value;
+        }
+    }
+}
+
+// Sync quantity from input to hidden field
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInput = document.getElementById('quantityInput');
+    const miktar_input = document.getElementById('miktar_input');
+    
+    if (quantityInput && miktar_input) {
+        quantityInput.addEventListener('change', function() {
+            miktar_input.value = this.value;
+        });
+    }
+    
+    // Initialize tabs if available
+    if (typeof bootstrap !== 'undefined') {
+        const tabElements = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabElements.forEach(tabEl => {
+            new bootstrap.Tab(tabEl);
+        });
+    }
+    
+    // AJAX form submission
+    const addToCartForm = document.querySelector('.add-to-cart-form');
+    if (addToCartForm) {
+        addToCartForm.addEventListener('submit', function(e) {
+            if (!this.classList.contains('ajax-form-initialized')) {
+                // The cart-ajax.js will handle this form
+                return;
+            }
+            
+            e.preventDefault();
+            
+            // Custom AJAX handling if needed
+            const formData = new FormData(this);
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart count and show success message
+                    const cartBadge = document.getElementById('cartCount');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cart_count;
+                    }
+                    
+                    // Show success message
+                    const btn = document.querySelector('.btn-add-to-cart');
+                    const originalText = btn.innerHTML;
+                    
+                    btn.innerHTML = '<i class="fas fa-check me-2"></i>Sepete Eklendi!';
+                    btn.classList.add('btn-success');
+                    btn.classList.remove('btn-add-to-cart');
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-add-to-cart');
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                console.error('Sepete eklerken hata oluştu:', error);
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

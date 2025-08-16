@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profili Düzenle - ONEP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-content {
+        padding-top: 100px;
+        min-height: 100vh;
+        background: #f8f9fa;
+    }
+    
+    .profile-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .profile-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #667eea;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        margin: 0 auto 20px;
+    }
+    
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .form-section:last-child {
+        border-bottom: none;
+    }
+    
+    .form-section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .form-section-icon {
+        width: 36px;
+        height: 36px;
+        background: #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+    
+    .btn-action {
+        border-radius: 8px;
+        padding: 10px 25px;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="profile-container">
+                    <!-- Profile Header -->
+                    <div class="profile-header">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h1 class="fw-bold">{{ user.username }}</h1>
+                        <p class="text-muted">ONEP Üyesi</p>
+                    </div>
+                    
+                    <!-- Profile Edit Form -->
+                    <form method="post" action="{% url 'profile_edit' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Messages -->
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <!-- Personal Information Section -->
+                        <div class="form-section">
+                            <div class="form-section-header">
+                                <div class="form-section-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <h3 class="mb-0">Kişisel Bilgiler</h3>
+                            </div>
+                            
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="first_name" class="form-label">Ad</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" 
+                                           value="{{ user.first_name }}" placeholder="Adınızı girin">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="last_name" class="form-label">Soyad</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" 
+                                           value="{{ user.last_name }}" placeholder="Soyadınızı girin">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">E-posta</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ user.email }}" placeholder="E-posta adresinizi girin">
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button type="submit" class="btn btn-primary btn-action">
+                                <i class="fas fa-save me-2"></i>Değişiklikleri Kaydet
+                            </button>
+                            <a href="{% url 'profile' %}" class="btn btn-outline-secondary btn-action">
+                                <i class="fas fa-arrow-left me-2"></i>İptal
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
