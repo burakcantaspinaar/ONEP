@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.cache import never_cache
 from django.core.paginator import Paginator
 from django.db.models import Q, Avg, Prefetch
 from django.db import transaction
@@ -322,8 +323,9 @@ def order_history_view(request):
     return render(request, 'order_history.html', {'siparisler': siparisler})
 
 
+@never_cache
 def sepet_goruntule(request):
-    """Sepet görüntüleme sayfası"""
+    """Sepet görüntüleme sayfası - ASLA CACHE'LENMESIN"""
     sepet = request.session.get('sepet', {})
     sepet_urunleri = []
     toplam_tutar = Decimal('0.00')
@@ -365,8 +367,9 @@ def sepet_goruntule(request):
     return render(request, 'cart.html', context)
 
 
+@never_cache
 def sepete_ekle(request, urun_id):
-    """Ürünü sepete ekleme"""
+    """Ürünü sepete ekleme - ASLA CACHE'LENMESIN"""
     urun = get_object_or_404(Urun, id=urun_id)
     
     # Stok kontrolü
@@ -416,33 +419,65 @@ def sepete_ekle(request, urun_id):
         return redirect('product_list')
 
 
+@never_cache
 def sepetten_sil(request, urun_id):
-    """Ürünü sepetten silme"""
+    """Ürünü sepetten tamamen silen ve session'ı kaydeden güçlendirilmiş fonksiyon"""
     sepet = request.session.get('sepet', {})
     urun_id_str = str(urun_id)
     
-    if urun_id_str in sepet:
-        urun = get_object_or_404(Urun, id=urun_id)
-        del sepet[urun_id_str]
-        request.session['sepet'] = sepet
-        
-        # Cache temizleme (sepet değiştiğinde)
-        clear_user_cache(request)
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            # Sepet toplamlarını hesapla
-            sepet_toplam = sepet_hesapla(sepet)
+    # Debug bilgisi ekleyelim
+    print(f"sepetten_sil çağrıldı - ürün ID: {urun_id}, mevcut sepet: {sepet}")
+    
+    try:
+        if urun_id_str in sepet:
+            urun = get_object_or_404(Urun, id=urun_id)
+            del sepet[urun_id_str]
+            request.session['sepet'] = sepet
+            # Session değişikliklerini anında kaydet
+            request.session.modified = True
             
+            # Session'ı anında disk'e yazma
+            request.session.save()
+            
+            # Cache temizleme (sepet değiştiğinde)
+            clear_user_cache(request)
+            
+            print(f"Ürün silindi, yeni sepet: {request.session.get('sepet', {})}")
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                # Sepet toplamlarını hesapla
+                sepet_toplam = sepet_hesapla(sepet)
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'{urun.urun_adi} sepetten silindi!',
+                    'cart_count': sum(sepet.values()),
+                    'toplam_tutar': sepet_toplam['toplam_tutar'],
+                    'kdv_tutari': sepet_toplam['kdv_tutari'],
+                    'genel_toplam': sepet_toplam['genel_toplam']
+                })
+            else:
+                messages.success(request, f'{urun.urun_adi} sepetten silindi!')
+                return redirect('cart')
+        else:
+            print(f"HATA: Ürün ID {urun_id} sepette bulunamadı")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Ürün sepette bulunamadı'
+                })
+            else:
+                messages.error(request, 'Ürün sepette bulunamadı!')
+                return redirect('cart')
+    except Exception as e:
+        print(f"sepetten_sil işleminde hata: {str(e)}")
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({
-                'success': True,
-                'message': f'{urun.urun_adi} sepetten silindi!',
-                'cart_count': sum(sepet.values()),
-                'toplam_tutar': sepet_toplam['toplam_tutar'],
-                'kdv_tutari': sepet_toplam['kdv_tutari'],
-                'genel_toplam': sepet_toplam['genel_toplam']
+                'success': False,
+                'message': f'Bir hata oluştu: {str(e)}'
             })
         else:
-            messages.success(request, f'{urun.urun_adi} sepetten silindi!')
+            messages.error(request, f'Bir hata oluştu: {str(e)}')
             return redirect('cart')
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -456,8 +491,9 @@ def sepetten_sil(request, urun_id):
 
 
 @require_POST
+@never_cache
 def sepet_guncelle(request, urun_id):
-    """Sepetteki ürün miktarını güncelleme"""
+    """Sepetteki ürün miktarını güncelleme - ASLA CACHE'LENMESIN"""
     try:
         print(f"sepet_guncelle called - Method: {request.method}, urun_id: {urun_id}")
         print(f"Request headers: {dict(request.headers)}")
@@ -582,9 +618,14 @@ def sepet_guncelle(request, urun_id):
 
 
 @require_POST
+@never_cache
 def sepet_bosalt(request):
-    """Sepeti tamamen boşaltma"""
+    """Sepeti tamamen boşaltma - ASLA CACHE'LENMESIN"""
     request.session['sepet'] = {}
+    
+    # Session değişikliklerini anında kaydet
+    request.session.modified = True
+    request.session.save()
     
     # Cache temizleme (sepet boşaltıldığında)
     clear_user_cache(request)
@@ -593,6 +634,39 @@ def sepet_bosalt(request):
         'success': True,
         'message': 'Sepet boşaltıldı!',
         'cart_count': 0
+    })
+
+
+@never_cache
+def sepet_dogrula(request):
+    """Sepet tutarlılığını kontrol eden yeni endpoint"""
+    sepet = request.session.get('sepet', {})
+    degisti = False
+    
+    # Geçerli ürünleri kontrol et
+    for urun_id in list(sepet.keys()):
+        try:
+            urun = Urun.objects.get(id=int(urun_id))
+            # Ürün mevcut, bir şey yapma
+        except Urun.DoesNotExist:
+            # Ürün veritabanında yoksa sepetten kaldır
+            del sepet[urun_id]
+            degisti = True
+    
+    # 0 adet ürünleri kaldır
+    for urun_id in list(sepet.keys()):
+        if sepet[urun_id] <= 0:
+            del sepet[urun_id]
+            degisti = True
+    
+    if degisti:
+        request.session['sepet'] = sepet
+        request.session.modified = True
+        request.session.save()
+    
+    return JsonResponse({
+        'changed': degisti,
+        'cart_count': sum(sepet.values())
     })
 
 

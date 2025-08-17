@@ -25,6 +25,7 @@ urlpatterns = [
     path('cart/remove/<int:urun_id>/', views.sepetten_sil, name='sepetten_sil'),
     path('cart/update/<int:urun_id>/', views.sepet_guncelle, name='sepet_guncelle'),
     path('cart/clear/', views.sepet_bosalt, name='sepet_bosalt'),
+    path('cart/validate/', views.sepet_dogrula, name='sepet_dogrula'),
     
     # Sipariş yönetimi
     path('checkout/', views.checkout_view, name='checkout'),

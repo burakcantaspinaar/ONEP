@@ -79,6 +79,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'onep.middleware.CartNoCacheMiddleware',  # Sepet cache bypass middleware'i
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -195,11 +196,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Session configuration for cart management (OPTIMIZE EDİLDİ)
-SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+# Session configuration for cart management (OPTIMIZE EDİLDİ - WORKER SYNC)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Database için zorunlu
 SESSION_CACHE_ALIAS = 'default'
 SESSION_COOKIE_AGE = 86400  # 1 gün
-SESSION_SAVE_EVERY_REQUEST = False  # Her istekte session kaydetme
+SESSION_SAVE_EVERY_REQUEST = True  # Her istekte session'ı kaydet (WORKER SYNC)
+SESSION_COOKIE_SECURE = not DEBUG  # Production'da True
+SESSION_COOKIE_HTTPONLY = True  # JavaScript erişimine kapalı
 
 # Login/Logout redirect URLs
 LOGIN_REDIRECT_URL = '/'

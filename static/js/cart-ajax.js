@@ -16,6 +16,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     const csrftoken = getCookie('csrftoken');
     
+    // Sepet doğrulama - sayfa yüklendiğinde sepeti kontrol et
+    fetch('/cart/validate/', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Cache-Control': 'no-cache, no-store'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.changed) {
+            console.log('Sepet doğrulandı ve güncellendi');
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.log('Sepet doğrulama hatası:', error);
+    });
+    
     // Sepet sayacını güncelleme yardımcı fonksiyonu
     function updateCartCount(count) {
         const cartCountElement = document.querySelector('.cart-count');
@@ -369,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Sepetten sil butonu
+        // Sepetten sil butonu (GÜÇLENDIRILDI)
         else if (e.target.closest('.remove-cart-form button')) {
             e.preventDefault();
             const button = e.target.closest('.remove-cart-form button');
@@ -390,13 +409,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const urunAdi = form.dataset.urunAdi || "Ürün";
+            const productRow = form.closest('.product-row');
+            
+            // Önce UI'dan kaldır (hızlı yanıt için)
+            if (productRow) {
+                productRow.style.opacity = 0.5;  // Siliniyor görünümü
+            }
             
             fetch(formAction, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrftoken,
                     'X-Requested-With': 'XMLHttpRequest',
-                }
+                    'Cache-Control': 'no-cache, no-store'  // Tarayıcı cache'ini engelle
+                },
+                credentials: 'same-origin'
             })
             .then(response => {
                 if (!response.ok) {
@@ -411,42 +438,43 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 if (data.success) {
-                    // Ürünü listeden kaldır
-                    const row = form.closest('.row');
-                    if (row) {
-                        row.style.opacity = '0';
-                        setTimeout(() => {
-                            row.remove();
-                            
-                            // Eğer sepet boşaldıysa sayfayı yenile
-                            if (data.cart_count === 0) {
-                                location.reload();
-                            }
-                        }, 300);
+                    // Başarılıysa
+                    if (productRow) {
+                        productRow.remove();  // DOM'dan tamamen kaldır
                     }
                     
-                    // Sepet sayacını güncelle
+                    // Cart count güncelleme
                     updateCartCount(data.cart_count || 0);
+                    
+                    // Sepet boşsa mesaj göster
+                    const cartItems = document.querySelector('.cart-items');
+                    if (data.cart_count === 0 && cartItems) {
+                        cartItems.innerHTML = '<div class="alert alert-info">Sepetinizde ürün bulunmuyor.</div>';
+                    }
                     
                     // Sepet özetini güncelle
                     if (data.toplam_tutar !== undefined) {
                         updateCartTotals(data);
-                        
-                        // Tüm fiyat elementlerini anında güncelle
-                        const priceElements = document.querySelectorAll('.cart-summary-total');
-                        priceElements.forEach(el => {
-                            el.textContent = `${data.genel_toplam.toFixed(2)} ₺`;
-                        });
                     }
                     
                     showToast(`${urunAdi} sepetten silindi!`);
+                    
+                    // Sayfayı yeniden yükle (en garanti yöntem)
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 300);
                 } else {
-                    showToast(data.message || 'Silme işlemi başarısız', 'danger');
+                    // Başarısız olursa - error mesajını göster
+                    alert("Ürün silinirken bir hata oluştu: " + data.message);
+                    
+                    // Sayfayı yeniden yükle
+                    window.location.reload();
                 }
             })
             .catch(error => {
-                console.error('Hata:', error);
-                showToast('Bir hata oluştu, lütfen tekrar deneyin', 'danger');
+                console.error('Sepet işlemi sırasında hata:', error);
+                alert("İşlem sırasında bir hata oluştu. Sayfa yenileniyor...");
+                window.location.reload();
             });
         }
     });
