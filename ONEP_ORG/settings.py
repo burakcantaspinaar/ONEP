@@ -19,17 +19,29 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-onep-e-commerce-platform-development-key-2025')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True  # Geçici olarak hata mesajlarını görmek için True
+# SECURITY WARNING: don't run with debug turned on in production! - OPTIMIZE EDİLDİ
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-# Print environment info for debugging
+# Production Debug Environment Check (OPTIMIZE EDİLDİ)
 import os
-print(f"🔧 ONEP DEBUG: Environment check")
-print(f"🔧 DATABASE_URL exists: {'DATABASE_URL' in os.environ}")
-print(f"🔧 SECRET_KEY from env: {'SECRET_KEY' in os.environ}")
-print(f"🔧 Current working directory: {os.getcwd()}")
+if DEBUG:
+    print(f"🔧 ONEP DEBUG: Environment check")
+    print(f"🔧 DATABASE_URL exists: {'DATABASE_URL' in os.environ}")
+    print(f"🔧 SECRET_KEY from env: {'SECRET_KEY' in os.environ}")
+    print(f"🔧 Current working directory: {os.getcwd()}")
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
+
+# Production Security Settings (OPTIMIZE EDİLDİ)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 yıl
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 
 # Application definition
@@ -44,7 +56,26 @@ INSTALLED_APPS = [
     'onep',  # ONEP uygulamamız
 ]
 
+# Cache framework ayarları (PERFORMANCE BOOST)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'onep-cache',
+        'TIMEOUT': 300,  # 5 dakika önbellek
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,  # Maksimum önbellek girişi
+            'CULL_FREQUENCY': 3,  # Her 3 seferinde bir fazlalık girdileri temizle
+        }
+    }
+}
+
+# Site genelinde önbellek
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_SECONDS = 600  # 10 dakika önbellek
+CACHE_MIDDLEWARE_KEY_PREFIX = 'onep'
+
 MIDDLEWARE = [
+    'django.middleware.cache.UpdateCacheMiddleware',  # En başa ekle
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -53,6 +84,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',  # En sona ekle
 ]
 
 ROOT_URLCONF = 'ONEP_ORG.urls'
@@ -70,6 +102,13 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'onep.context_processors.cart_context',
             ],
+            # Template önbelleği (PERFORMANCE BOOST)
+            'loaders': [
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                ]),
+            ],
         },
     },
 ]
@@ -77,17 +116,32 @@ TEMPLATES = [
 WSGI_APPLICATION = 'ONEP_ORG.wsgi.application'
 
 
-# Database - PostgreSQL bağlantı yapılandırması
+# Database - PostgreSQL bağlantı yapılandırması (OPTIMIZE EDİLDİ)
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
     'default': dj_database_url.config(
         default="postgresql://postgres:Selam.235689.@127.0.0.1:5432/onep_db",
-        conn_max_age=600,
-        conn_health_checks=True,
+        conn_max_age=int(os.environ.get('DATABASE_CONN_MAX_AGE', 600)),  # 10 dakika bağlantı havuzu
+        conn_health_checks=True,  # Sağlık kontrolü aktif
+        engine='django.db.backends.postgresql',  # PostgreSQL için zorunlu
+        options={
+            'connect_timeout': 5,  # 5 saniye bağlantı zaman aşımı
+            'keepalives': 1,       # Bağlantıyı canlı tut
+            'keepalives_idle': 30, # 30 saniye boyunca işlem yoksa keepalive
+            'keepalives_interval': 5, # Keepalive sinyalleri arası 5 saniye
+            'keepalives_count': 5,  # 5 keepalive başarısız olursa bağlantıyı kapat
+        }
     ) if not os.environ.get('DATABASE_URL') else dj_database_url.config(
-        conn_max_age=600,
+        conn_max_age=int(os.environ.get('DATABASE_CONN_MAX_AGE', 600)),
         conn_health_checks=True,
+        options={
+            'connect_timeout': 5,
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 5,
+            'keepalives_count': 5,
+        }
     )
 }
 
@@ -126,14 +180,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
+# Static files (CSS, JavaScript, Images) - OPTIMIZE EDİLDİ
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# WhiteNoise configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# WhiteNoise configuration for compressed static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
@@ -144,13 +199,59 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Session configuration for cart management
-SESSION_COOKIE_AGE = 86400  # 24 saat
-SESSION_SAVE_EVERY_REQUEST = True
+# Session configuration for cart management (OPTIMIZE EDİLDİ)
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+SESSION_CACHE_ALIAS = 'default'
+SESSION_COOKIE_AGE = 86400  # 1 gün
+SESSION_SAVE_EVERY_REQUEST = False  # Her istekte session kaydetme
 
 # Login/Logout redirect URLs
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Logging Configuration (OPTIMIZE EDİLDİ)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'django.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'] if DEBUG else ['file'],
+            'level': 'INFO' if DEBUG else 'WARNING',
+            'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': ['console'] if DEBUG else [],
+            'level': 'DEBUG' if DEBUG else 'WARNING',
+            'propagate': False,
+        },
+        'onep': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 LOGIN_URL = '/login/'
 
 # Security settings for production

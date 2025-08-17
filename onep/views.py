@@ -2,17 +2,38 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, Prefetch
 from django.db import transaction
+from django.core.cache import cache
 from decimal import Decimal
 import json
+import time
+import os
 
 from .models import Urun, Siparis, SiparisKalemi, Yorum
 from .forms import KullaniciKayitFormu, KullaniciGirisFormu, YorumFormu
+
+
+def health_check(request):
+    """
+    Veritabanı bağlantısı kullanmayan basit health check
+    Bu sayede Render'ın health check istekleri veritabanı bağlantısı açmaz
+    """
+    status = {
+        'status': 'healthy',
+        'timestamp': time.time(),
+        'environment': os.environ.get('DJANGO_SETTINGS_MODULE', 'ONEP_ORG.settings'),
+        'version': '1.0'
+    }
+    
+    if request.GET.get('format') == 'json':
+        return JsonResponse(status)
+    
+    return HttpResponse("OK")
 
 
 def sepet_hesapla(sepet):
@@ -39,8 +60,19 @@ def sepet_hesapla(sepet):
 
 
 def product_list_view(request):
-    """Ürün listeleme sayfası"""
-    urunler = Urun.objects.all().order_by('-olusturulma_tarihi')
+    """Ürün listeleme sayfası - OPTIMIZE EDİLDİ"""
+    # Cache key oluştur
+    cache_key = f"products_list_{request.GET.urlencode()}"
+    
+    # Cache'den kontrol et
+    cached_result = cache.get(cache_key)
+    if cached_result:
+        return cached_result
+    
+    # Query optimization: Yorumları da önceden yükle
+    urunler = Urun.objects.prefetch_related(
+        Prefetch('yorumlar', queryset=Yorum.objects.select_related('kullanici'))
+    ).order_by('-olusturulma_tarihi')
     
     # Arama fonksiyonu
     arama = request.GET.get('arama')
@@ -82,8 +114,12 @@ def product_list_view(request):
     sayfa_numarasi = request.GET.get('page')
     sayfa_urunleri = paginator.get_page(sayfa_numarasi)
     
-    # Kategoriler listesi (tekrarsız)
-    kategoriler = list(set(Urun.objects.values_list('kategori', flat=True).exclude(kategori='')))
+    # Kategoriler listesi - Cache ile optimize et
+    kategoriler_cache_key = "product_categories"
+    kategoriler = cache.get(kategoriler_cache_key)
+    if not kategoriler:
+        kategoriler = list(set(Urun.objects.values_list('kategori', flat=True).exclude(kategori='')))
+        cache.set(kategoriler_cache_key, kategoriler, 3600)  # 1 saat cache
     
     context = {
         'urunler': sayfa_urunleri,
@@ -96,27 +132,48 @@ def product_list_view(request):
     # AJAX isteği kontrolü
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         # AJAX isteği ise sadece ürün grid'ini döndür
-        return render(request, '_product_grid.html', context)
+        response = render(request, '_product_grid.html', context)
+        # AJAX response'u cache'leme (kısa süreli)
+        cache.set(f"{cache_key}_ajax", response, 300)  # 5 dakika
+        return response
     
-    return render(request, 'product_list.html', context)
+    # Normal response'u cache'le
+    response = render(request, 'product_list.html', context)
+    cache.set(cache_key, response, 600)  # 10 dakika cache
+    return response
 
 
 def product_detail_view(request, id):
-    """Ürün detay sayfası"""
-    urun = get_object_or_404(Urun, id=id)
+    """Ürün detay sayfası - OPTIMIZE EDİLDİ"""
+    # Cache key ile ürün detayını cache'le
+    cache_key = f"product_detail_{id}"
+    cached_product = cache.get(cache_key)
     
-    # Ürün yorumları
-    yorumlar = urun.yorumlar.all().select_related('kullanici')
+    if cached_product:
+        return cached_product
+    
+    # Select_related ve prefetch_related ile optimize et
+    urun = get_object_or_404(
+        Urun.objects.prefetch_related('yorumlar__kullanici'), 
+        id=id
+    )
+    
+    # Ürün yorumları - zaten prefetch edildi
+    yorumlar = urun.yorumlar.all()
     
     # Ortalama puan hesaplama
     ortalama_puan = yorumlar.aggregate(ort=Avg('puan'))['ort']
     if ortalama_puan:
         ortalama_puan = round(ortalama_puan, 1)
     
-    # Benzer ürünler (aynı kategoriden)
-    benzer_urunler = Urun.objects.filter(
-        kategori=urun.kategori
-    ).exclude(id=urun.id)[:4]
+    # Benzer ürünler (aynı kategoriden) - Cache ile
+    benzer_cache_key = f"related_products_{urun.kategori}_{id}"
+    benzer_urunler = cache.get(benzer_cache_key)
+    if not benzer_urunler:
+        benzer_urunler = Urun.objects.filter(
+            kategori=urun.kategori
+        ).exclude(id=urun.id)[:4]
+        cache.set(benzer_cache_key, benzer_urunler, 1800)  # 30 dakika
     
     context = {
         'product': urun,
@@ -124,7 +181,10 @@ def product_detail_view(request, id):
         'ortalama_puan': ortalama_puan,
         'related_products': benzer_urunler,
     }
-    return render(request, 'product_detail.html', context)
+    
+    response = render(request, 'product_detail.html', context)
+    cache.set(cache_key, response, 900)  # 15 dakika cache
+    return response
 
 
 def signup_view(request):

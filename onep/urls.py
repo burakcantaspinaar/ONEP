@@ -9,6 +9,9 @@ urlpatterns = [
     path('', views.product_list_view, name='product_list'),
     path('product/<int:id>/', views.product_detail_view, name='product_detail'),
     
+    # Health check endpoint (veritabanı bağlantısı kullanmaz)
+    path('health/', views.health_check, name='health_check'),
+    
     # Kullanıcı yönetimi
     path('signup/', views.signup_view, name='signup'),
     path('login/', views.login_view, name='login'),
