@@ -18,6 +18,17 @@ from .models import Urun, Siparis, SiparisKalemi, Yorum
 from .forms import KullaniciKayitFormu, KullaniciGirisFormu, YorumFormu
 
 
+def clear_user_cache(request):
+    """Kullanıcıya özel cache'leri temizle"""
+    cache_patterns = [
+        "products_list_*",
+        "product_detail_*", 
+        "product_categories"
+    ]
+    for pattern in cache_patterns:
+        cache.delete(pattern)
+
+
 def health_check(request):
     """
     Veritabanı bağlantısı kullanmayan basit health check
@@ -61,13 +72,18 @@ def sepet_hesapla(sepet):
 
 def product_list_view(request):
     """Ürün listeleme sayfası - OPTIMIZE EDİLDİ"""
-    # Cache key oluştur
+    # Sepet verisi olmayan sayfalar için cache key oluştur
     cache_key = f"products_list_{request.GET.urlencode()}"
     
-    # Cache'den kontrol et
-    cached_result = cache.get(cache_key)
-    if cached_result:
-        return cached_result
+    # Sadece anonim kullanıcılar ve boş sepet durumunda cache kullan
+    sepet = request.session.get('sepet', {})
+    can_use_cache = not sepet and not request.user.is_authenticated
+    
+    # Cache'den kontrol et (sadece güvenli durumlarda)
+    if can_use_cache:
+        cached_result = cache.get(cache_key)
+        if cached_result:
+            return cached_result
     
     # Query optimization: Yorumları da önceden yükle
     urunler = Urun.objects.prefetch_related(
@@ -133,13 +149,15 @@ def product_list_view(request):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         # AJAX isteği ise sadece ürün grid'ini döndür
         response = render(request, '_product_grid.html', context)
-        # AJAX response'u cache'leme (kısa süreli)
-        cache.set(f"{cache_key}_ajax", response, 300)  # 5 dakika
+        # AJAX response'u cache'leme (sadece güvenli durumlarda)
+        if can_use_cache:
+            cache.set(f"{cache_key}_ajax", response, 300)  # 5 dakika
         return response
     
-    # Normal response'u cache'le
+    # Normal response'u cache'le (sadece güvenli durumlarda)
     response = render(request, 'product_list.html', context)
-    cache.set(cache_key, response, 600)  # 10 dakika cache
+    if can_use_cache:
+        cache.set(cache_key, response, 600)  # 10 dakika cache
     return response
 
 
@@ -381,6 +399,9 @@ def sepete_ekle(request, urun_id):
     sepet[urun_id_str] = mevcut_miktar + 1
     request.session['sepet'] = sepet
     
+    # Cache temizleme (sepet değiştiğinde)
+    clear_user_cache(request)
+    
     # Sepet toplam ürün sayısını hesapla
     toplam_urun = sum(sepet.values())
     
@@ -404,6 +425,9 @@ def sepetten_sil(request, urun_id):
         urun = get_object_or_404(Urun, id=urun_id)
         del sepet[urun_id_str]
         request.session['sepet'] = sepet
+        
+        # Cache temizleme (sepet değiştiğinde)
+        clear_user_cache(request)
         
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             # Sepet toplamlarını hesapla
@@ -479,6 +503,9 @@ def sepet_guncelle(request, urun_id):
                     if yeni_miktar <= urun.stok_adedi:
                         sepet[urun_id_str] = yeni_miktar
                         request.session['sepet'] = sepet
+                        
+                        # Cache temizleme (sepet değiştiğinde)
+                        clear_user_cache(request)
                         
                         # Yeni toplam hesapla
                         yeni_toplam = urun.fiyat * yeni_miktar
@@ -558,6 +585,10 @@ def sepet_guncelle(request, urun_id):
 def sepet_bosalt(request):
     """Sepeti tamamen boşaltma"""
     request.session['sepet'] = {}
+    
+    # Cache temizleme (sepet boşaltıldığında)
+    clear_user_cache(request)
+    
     return JsonResponse({
         'success': True,
         'message': 'Sepet boşaltıldı!',
