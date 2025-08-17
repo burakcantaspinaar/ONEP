@@ -119,30 +119,26 @@ WSGI_APPLICATION = 'ONEP_ORG.wsgi.application'
 # Database - PostgreSQL bağlantı yapılandırması (OPTIMIZE EDİLDİ)
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# Önce dj_database_url ile temel bağlantıyı alın
+db_config = dj_database_url.config(
+    default="postgresql://postgres:Selam.235689.@127.0.0.1:5432/onep_db",
+    conn_max_age=int(os.environ.get('DATABASE_CONN_MAX_AGE', 600)),
+    conn_health_checks=True,
+)
+
+# Sonra PostgreSQL özel ayarlarını ekleyin
+if db_config:
+    # PostgreSQL options'ı ekliyoruz
+    db_config['OPTIONS'] = {
+        'connect_timeout': 5,
+        'keepalives': 1,
+        'keepalives_idle': 30,
+        'keepalives_interval': 5,
+        'keepalives_count': 5,
+    }
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default="postgresql://postgres:Selam.235689.@127.0.0.1:5432/onep_db",
-        conn_max_age=int(os.environ.get('DATABASE_CONN_MAX_AGE', 600)),  # 10 dakika bağlantı havuzu
-        conn_health_checks=True,  # Sağlık kontrolü aktif
-        engine='django.db.backends.postgresql',  # PostgreSQL için zorunlu
-        options={
-            'connect_timeout': 5,  # 5 saniye bağlantı zaman aşımı
-            'keepalives': 1,       # Bağlantıyı canlı tut
-            'keepalives_idle': 30, # 30 saniye boyunca işlem yoksa keepalive
-            'keepalives_interval': 5, # Keepalive sinyalleri arası 5 saniye
-            'keepalives_count': 5,  # 5 keepalive başarısız olursa bağlantıyı kapat
-        }
-    ) if not os.environ.get('DATABASE_URL') else dj_database_url.config(
-        conn_max_age=int(os.environ.get('DATABASE_CONN_MAX_AGE', 600)),
-        conn_health_checks=True,
-        options={
-            'connect_timeout': 5,
-            'keepalives': 1,
-            'keepalives_idle': 30,
-            'keepalives_interval': 5,
-            'keepalives_count': 5,
-        }
-    )
+    'default': db_config
 }
 
 
